@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Work+Sans:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans: 'Work Sans', system-ui, sans-serif;
+
+  --color-cream: #F5F3EF;
+  --color-ink: #2C2C2A;
+  --color-forest: #2A5C1E;
+  --color-forest-dark: #1E4415;
+  --color-slate: #595959;
+  --color-divider: #D9D5CD;
+  --color-surface: #EDEAE3;
+}
+
+@layer base {
+  html {
+    background-color: #F5F3EF;
+    color: #2C2C2A;
+    font-family: 'Work Sans', system-ui, sans-serif;
+  }
+
+  /* Visible focus indicator for keyboard navigation — WCAG 2.4.11 */
+  :focus-visible {
+    outline: 3px solid #2A5C1E;
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  /* Suppress scrollbar until needed */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D9D5CD;
+    border-radius: 3px;
+  }
+}

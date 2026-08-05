@@ -1,0 +1,10 @@
+{
+  "description": "Provides an accessible, WCAG 2.2 AA-compliant website tailored for LLCs to showcase services and enhance professional online presence.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

@@ -1,0 +1,10 @@
+<svg width="680" height="220" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>TrueNorth Accessibility logo, on white</title>
+<desc>Navy four-pointed star icon inside a circle, with navy and gray wordmark, for use on white backgrounds</desc>
+<rect x="0" y="0" width="680" height="220" fill="#ffffff"/>
+<circle cx="110" cy="110" r="70" fill="#1e3a5f"/>
+<path d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z" fill="#ffffff"/>
+<circle cx="110" cy="110" r="10" fill="#1e3a5f"/>
+<text x="210" y="100" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#1e3a5f">TrueNorth</text>
+<text x="210" y="140" font-family="Arial, sans-serif" font-size="24" font-weight="400" letter-spacing="2" fill="#595959">ACCESSIBILITY</text>
+</svg>
