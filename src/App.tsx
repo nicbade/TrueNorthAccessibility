@@ -289,7 +289,9 @@ function Nav({
                   onClick={(e) => { e.preventDefault(); go(link.page) }}
                   aria-current={page === link.page ? 'page' : undefined}
                   className={`text-sm font-medium tracking-wide transition-colors rounded ${
-                    page === link.page ? 'text-forest' : 'text-slate hover:text-ink'
+                    page === link.page
+                      ? 'text-forest underline underline-offset-4'
+                      : 'text-slate hover:text-ink'
                   }`}
                 >
                   {link.label}
@@ -354,7 +356,9 @@ function Nav({
                   onClick={(e) => { e.preventDefault(); go(link.page) }}
                   aria-current={page === link.page ? 'page' : undefined}
                   className={`text-sm font-medium py-1 rounded ${
-                    page === link.page ? 'text-forest' : 'text-ink'
+                    page === link.page
+                      ? 'text-forest underline underline-offset-4'
+                      : 'text-ink'
                   }`}
                 >
                   {link.label}
@@ -560,9 +564,9 @@ function ServicesPage({ navigate }: { navigate: (p: Page) => void }) {
         makes sense for you.
       </p>
 
-      <ol className="flex flex-col divide-y divide-divider list-none" aria-label="Service list">
+      <div className="flex flex-col divide-y divide-divider">
         {SERVICES.map((service, i) => (
-          <li key={service.id} className="py-14 first:pt-0 last:pb-0">
+          <div key={service.id} className="py-14 first:pt-0 last:pb-0">
             <div className="grid md:grid-cols-[220px_1fr] gap-8 md:gap-14">
               <div>
                 <p className="text-xs text-slate mb-2 font-medium tabular-nums">
@@ -575,10 +579,15 @@ function ServicesPage({ navigate }: { navigate: (p: Page) => void }) {
               </div>
               <div>
                 <p className="text-sm text-slate leading-relaxed mb-7">{service.detail}</p>
-                <Eyebrow>{"What's Included"}</Eyebrow>
+                <h3
+                  id={`included-${service.id}`}
+                  className="text-forest text-xs font-semibold tracking-widest uppercase mb-3"
+                >
+                  {"What's Included"}
+                </h3>
                 <ul
                   className="flex flex-col gap-2"
-                  aria-label={`${service.name} inclusions`}
+                  aria-labelledby={`included-${service.id}`}
                 >
                   {service.includes.map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm text-slate">
@@ -592,9 +601,9 @@ function ServicesPage({ navigate }: { navigate: (p: Page) => void }) {
                 </ul>
               </div>
             </div>
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
 
       <div className="border-t border-divider pt-16 mt-4">
         <div className="bg-surface rounded-sm p-10">
@@ -603,9 +612,13 @@ function ServicesPage({ navigate }: { navigate: (p: Page) => void }) {
             Book a free 30-minute consultation and we'll help you figure out which
             services make sense for your organization right now.
           </p>
-          <CTAButton onClick={() => navigate('contact')}>
+          <a
+            href="/contact"
+            onClick={(e) => { e.preventDefault(); navigate('contact') }}
+            className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest text-white hover:bg-forest-dark"
+          >
             Book a Free Consultation
-          </CTAButton>
+          </a>
         </div>
       </div>
     </div>
