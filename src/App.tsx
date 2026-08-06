@@ -10,10 +10,10 @@ const PAGE_PATHS: Record<Page, string> = {
 }
 
 const PAGE_TITLES: Record<Page, string> = {
-  home: 'TrueNorth Accessibility',
-  services: 'Services · TrueNorth Accessibility',
-  about: 'About · TrueNorth Accessibility',
-  contact: 'Contact · TrueNorth Accessibility',
+  home: 'Home | True North Accessibility',
+  services: 'Services | True North Accessibility',
+  about: 'About | True North Accessibility',
+  contact: 'Contact | True North Accessibility',
 }
 
 function pathToPage(pathname: string): Page {
