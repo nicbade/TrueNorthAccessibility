@@ -2,6 +2,28 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 
 type Page = 'home' | 'services' | 'about' | 'contact'
 
+const PAGE_PATHS: Record<Page, string> = {
+  home: '/',
+  services: '/services',
+  about: '/about',
+  contact: '/contact',
+}
+
+const PAGE_TITLES: Record<Page, string> = {
+  home: 'TrueNorth Accessibility',
+  services: 'Services · TrueNorth Accessibility',
+  about: 'About · TrueNorth Accessibility',
+  contact: 'Contact · TrueNorth Accessibility',
+}
+
+function pathToPage(pathname: string): Page {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  const entry = (Object.entries(PAGE_PATHS) as [Page, string][]).find(
+    ([, path]) => path === normalized,
+  )
+  return entry?.[0] ?? 'home'
+}
+
 /* ─── Logo ────────────────────────────────────────────────────────────── */
 
 function Logo({ compact = false }: { compact?: boolean }) {
@@ -194,11 +216,11 @@ function CTAButton({
 
 /* ─── Nav ─────────────────────────────────────────────────────────────── */
 
-const NAV_LINKS: { label: string; page: Page }[] = [
-  { label: 'Home', page: 'home' },
-  { label: 'Services', page: 'services' },
-  { label: 'About', page: 'about' },
-  { label: 'Contact', page: 'contact' },
+const NAV_LINKS: { label: string; page: Page; path: string }[] = [
+  { label: 'Home', page: 'home', path: '/' },
+  { label: 'Services', page: 'services', path: '/services' },
+  { label: 'About', page: 'about', path: '/about' },
+  { label: 'Contact', page: 'contact', path: '/contact' },
 ]
 
 function Nav({
@@ -240,7 +262,7 @@ function Nav({
       <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo link */}
         <a
-          href="#home"
+          href="/"
           onClick={(e) => { e.preventDefault(); go('home') }}
           className="focus:outline-none rounded"
         >
@@ -253,7 +275,7 @@ function Nav({
           {NAV_LINKS.map((link) => (
             <a
               key={link.page}
-              href={`#${link.page}`}
+              href={link.path}
               onClick={(e) => { e.preventDefault(); go(link.page) }}
               aria-current={page === link.page ? 'page' : undefined}
               className={`text-sm font-medium tracking-wide transition-colors focus:outline-none rounded ${
@@ -264,7 +286,7 @@ function Nav({
             </a>
           ))}
           <a
-            href="#contact"
+            href="/contact"
             onClick={(e) => { e.preventDefault(); go('contact') }}
             className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors focus:outline-none"
           >
@@ -313,7 +335,7 @@ function Nav({
           {NAV_LINKS.map((link) => (
             <a
               key={link.page}
-              href={`#${link.page}`}
+              href={link.path}
               onClick={(e) => { e.preventDefault(); go(link.page) }}
               aria-current={page === link.page ? 'page' : undefined}
               className={`text-sm font-medium py-1 rounded focus:outline-none ${
@@ -324,7 +346,7 @@ function Nav({
             </a>
           ))}
           <a
-            href="#contact"
+            href="/contact"
             onClick={(e) => { e.preventDefault(); go('contact') }}
             className="px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center focus:outline-none"
           >
@@ -354,7 +376,7 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
           {NAV_LINKS.map((link) => (
             <a
               key={link.page}
-              href={`#${link.page}`}
+              href={link.path}
               onClick={(e) => { e.preventDefault(); navigate(link.page) }}
               className="hover:text-ink focus:outline-none rounded transition-colors"
             >
@@ -1060,10 +1082,30 @@ function ContactPage() {
 /* ─── App ─────────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [page, setPage] = useState<Page>('home')
+  const [page, setPage] = useState<Page>(() => pathToPage(window.location.pathname))
   const mainRef = useRef<HTMLElement>(null)
 
+  useEffect(() => {
+    document.title = PAGE_TITLES[page]
+  }, [page])
+
+  useEffect(() => {
+    const onPopState = () => {
+      setPage(pathToPage(window.location.pathname))
+      requestAnimationFrame(() => {
+        mainRef.current?.focus()
+        window.scrollTo({ top: 0 })
+      })
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
   const navigate = (to: Page) => {
+    const path = PAGE_PATHS[to]
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path)
+    }
     setPage(to)
     // Move focus to main content after page change (WCAG 2.4.3)
     requestAnimationFrame(() => {
