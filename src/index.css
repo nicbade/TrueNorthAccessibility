@@ -12,6 +12,11 @@
   --color-slate: #595959;
   --color-divider: #D9D5CD;
   --color-surface: #EDEAE3;
+
+  /* Focus ring pair — each ≥ 3:1 against the other's typical adjacent bg
+     forest↔cream ≈ 7.2:1 */
+  --focus-ring: #2A5C1E;
+  --focus-halo: #F5F3EF;
 }
 
 @layer base {
@@ -21,11 +26,22 @@
     font-family: 'Work Sans', system-ui, sans-serif;
   }
 
-  /* Visible focus indicator for keyboard navigation — WCAG 2.4.11 */
+  /*
+   * Keyboard focus indicator — WCAG 2.4.7 / 2.4.11 / 2.4.13
+   * Dual ring: cream halo (contrasts on forest buttons) + forest outline
+   * (contrasts on cream). Each pair ≥ 3:1. Minimum 2px perimeter.
+   */
   :focus-visible {
-    outline: 3px solid #2A5C1E;
+    outline: 3px solid var(--focus-ring);
     outline-offset: 3px;
+    box-shadow: 0 0 0 3px var(--focus-halo);
     border-radius: 3px;
+  }
+
+  /* Hide focus chrome for pointer users; keep keyboard :focus-visible */
+  :focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
   }
 
   /* Suppress scrollbar until needed */

@@ -202,7 +202,7 @@ function CTAButton({
   variant?: 'primary' | 'secondary'
 }) {
   const base =
-    'inline-block px-6 py-3 text-sm font-medium rounded transition-colors focus:outline-none'
+    'inline-block px-6 py-3 text-sm font-medium rounded transition-colors'
   const styles =
     variant === 'primary'
       ? 'bg-forest text-white hover:bg-forest-dark'
@@ -264,7 +264,7 @@ function Nav({
         <a
           href="/"
           onClick={(e) => { e.preventDefault(); go('home') }}
-          className="focus:outline-none rounded"
+          className="rounded"
         >
           <Logo />
           <span className="sr-only">TrueNorth Accessibility, Go to homepage</span>
@@ -278,7 +278,7 @@ function Nav({
               href={link.path}
               onClick={(e) => { e.preventDefault(); go(link.page) }}
               aria-current={page === link.page ? 'page' : undefined}
-              className={`text-sm font-medium tracking-wide transition-colors focus:outline-none rounded ${
+              className={`text-sm font-medium tracking-wide transition-colors rounded ${
                 page === link.page ? 'text-forest' : 'text-slate hover:text-ink'
               }`}
             >
@@ -288,7 +288,7 @@ function Nav({
           <a
             href="/contact"
             onClick={(e) => { e.preventDefault(); go('contact') }}
-            className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors focus:outline-none"
+            className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
           >
             Book a Consultation
           </a>
@@ -301,7 +301,7 @@ function Nav({
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
           onClick={() => setMenuOpen((o) => !o)}
-          className="md:hidden p-2 rounded text-ink hover:text-forest focus:outline-none transition-colors"
+          className="md:hidden p-2 rounded text-ink hover:text-forest transition-colors"
         >
           {menuOpen ? (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -338,7 +338,7 @@ function Nav({
               href={link.path}
               onClick={(e) => { e.preventDefault(); go(link.page) }}
               aria-current={page === link.page ? 'page' : undefined}
-              className={`text-sm font-medium py-1 rounded focus:outline-none ${
+              className={`text-sm font-medium py-1 rounded ${
                 page === link.page ? 'text-forest' : 'text-ink'
               }`}
             >
@@ -348,7 +348,7 @@ function Nav({
           <a
             href="/contact"
             onClick={(e) => { e.preventDefault(); go('contact') }}
-            className="px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center focus:outline-none"
+            className="px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center"
           >
             Book a Consultation
           </a>
@@ -378,14 +378,14 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
               key={link.page}
               href={link.path}
               onClick={(e) => { e.preventDefault(); navigate(link.page) }}
-              className="hover:text-ink focus:outline-none rounded transition-colors"
+              className="hover:text-ink rounded transition-colors"
             >
               {link.label}
             </a>
           ))}
           <a
             href="mailto:truenorth.accessibilityllc@gmail.com"
-            className="hover:text-ink focus:outline-none rounded transition-colors break-all"
+            className="hover:text-ink rounded transition-colors break-all"
           >
             truenorth.accessibilityllc@gmail.com
           </a>
@@ -451,7 +451,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
               <p className="text-sm text-slate leading-relaxed">{service.summary}</p>
               <button
                 onClick={() => navigate('services')}
-                className="mt-5 text-forest text-sm font-medium hover:underline focus:outline-none rounded"
+                className="mt-5 text-forest text-sm font-medium hover:underline rounded"
               >
                 Learn more →
               </button>
@@ -461,7 +461,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
         <div className="mt-8">
           <button
             onClick={() => navigate('services')}
-            className="text-forest text-sm font-medium hover:underline focus:outline-none rounded"
+            className="text-forest text-sm font-medium hover:underline rounded"
           >
             View all six services →
           </button>
@@ -853,7 +853,7 @@ function ContactPage() {
               setSubmitted(false)
               setFields({ name: '', email: '', company: '', service: '', message: '' })
             }}
-            className="text-forest text-sm font-medium hover:underline focus:outline-none rounded"
+            className="text-forest text-sm font-medium hover:underline rounded"
           >
             ← Send another message
           </button>
@@ -863,7 +863,7 @@ function ContactPage() {
   }
 
   const inputClass = (field: string) =>
-    `w-full px-4 py-3 border rounded-sm bg-cream text-ink text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest ${
+    `w-full px-4 py-3 border rounded-sm bg-cream text-ink text-sm transition-colors ${
       errors[field] ? 'border-red-400' : 'border-divider'
     }`
 
@@ -1026,7 +1026,7 @@ function ContactPage() {
               <div>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors focus:outline-none"
+                  className="px-6 py-3 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
                 >
                   Send Message
                 </button>
@@ -1045,7 +1045,7 @@ function ContactPage() {
                   <p className="font-medium text-ink mb-1">Email</p>
                   <a
                     href="mailto:truenorth.accessibilityllc@gmail.com"
-                    className="text-slate hover:text-forest focus:outline-none rounded transition-colors break-all"
+                    className="text-slate hover:text-forest rounded transition-colors break-all"
                   >
                     truenorth.accessibilityllc@gmail.com
                   </a>
@@ -1120,7 +1120,7 @@ export default function App() {
       <a
         href="#main-content"
         onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-forest focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-forest focus:text-white focus:rounded"
       >
         Skip to main content
       </a>
