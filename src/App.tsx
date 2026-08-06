@@ -267,11 +267,11 @@ function Nav({
           className="rounded"
         >
           <Logo />
-          <span className="sr-only">TrueNorth Accessibility, Go to homepage</span>
+          <span className="sr-only">TrueNorth Accessibility, Home</span>
         </a>
 
         {/* Desktop nav */}
-        <nav aria-label="Main navigation" className="hidden md:flex items-center gap-8">
+        <nav aria-label="Main" className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map((link) => (
             <a
               key={link.page}
@@ -449,12 +449,15 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             >
               <h3 className="font-serif text-xl text-ink mb-2">{service.name}</h3>
               <p className="text-sm text-slate leading-relaxed">{service.summary}</p>
-              <button
-                onClick={() => navigate('services')}
-                className="mt-5 text-forest text-sm font-medium hover:underline rounded"
+              <a
+                href="/services"
+                onClick={(e) => { e.preventDefault(); navigate('services') }}
+                className="mt-5 inline-block text-forest text-sm font-medium hover:underline rounded"
               >
-                Learn more →
-              </button>
+                Learn more
+                <span className="sr-only"> about {service.name}</span>
+                {' →'}
+              </a>
             </article>
           ))}
         </div>
@@ -923,7 +926,7 @@ function ContactPage() {
                   autoComplete="name"
                 />
                 {errors.name && (
-                  <p id="err-name" className="mt-1.5 text-xs text-red-600" role="alert">
+                  <p id="err-name" className="mt-1.5 text-xs text-red-700" role="alert">
                     {errors.name}
                   </p>
                 )}
@@ -951,7 +954,7 @@ function ContactPage() {
                   autoComplete="email"
                 />
                 {errors.email && (
-                  <p id="err-email" className="mt-1.5 text-xs text-red-600" role="alert">
+                  <p id="err-email" className="mt-1.5 text-xs text-red-700" role="alert">
                     {errors.email}
                   </p>
                 )}
@@ -1017,7 +1020,7 @@ function ContactPage() {
                   placeholder="Tell us a bit about your project or what you're looking for…"
                 />
                 {errors.message && (
-                  <p id="err-message" className="mt-1.5 text-xs text-red-600" role="alert">
+                  <p id="err-message" className="mt-1.5 text-xs text-red-700" role="alert">
                     {errors.message}
                   </p>
                 )}
