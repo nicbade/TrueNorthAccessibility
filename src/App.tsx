@@ -643,7 +643,7 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
               id="bio-heading"
               className="font-serif text-2xl text-ink leading-snug"
             >
-              Nic Bade, Lead Accessibility Consultant
+              Nic Bade, Accessibility Consultant
             </h2>
             <p className="text-slate leading-relaxed">
               Nic builds digital experiences that work for everyone. He's
@@ -651,7 +651,7 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
               give people independence.
             </p>
             <p className="text-slate leading-relaxed">
-              He gets it firsthand: Nic has mild dyslexia and uses a screen reader
+              He gets it firsthand: Nic has dyslexia and uses a screen reader
               for technical reading, since hearing and reading text together helps
               him process information. That personal connection goes back further
               He used to read aloud to his grandfather after he lost his sight
@@ -727,51 +727,6 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
 
       <Divider />
 
-      {/* Credentials */}
-      <section aria-labelledby="creds-heading" className="py-16">
-        <Eyebrow>Credentials</Eyebrow>
-        <h2 id="creds-heading" className="font-serif text-2xl text-ink mb-8">
-          Education & Certifications
-        </h2>
-        <ul className="flex flex-col gap-4" aria-label="Certifications and education">
-          {CERTS.map((cert) => (
-            <li
-              key={cert.name}
-              className="flex items-start gap-4 border border-divider rounded-sm p-5"
-            >
-              <span
-                className="mt-0.5 w-8 h-8 flex-shrink-0 rounded bg-forest flex items-center justify-center"
-                aria-hidden="true"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 13l4 4L19 7"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <div>
-                <p className="font-medium text-ink text-sm">{cert.name}</p>
-                <p className="text-slate text-sm">
-                  {cert.org} · {cert.year}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <Divider />
-
       {/* CTA */}
       <div className="pt-16">
         <div className="bg-surface rounded-sm p-10 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
@@ -786,7 +741,13 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
             </p>
           </div>
           <div className="flex-shrink-0">
-            <CTAButton onClick={() => navigate('contact')}>Get in Touch</CTAButton>
+            <a
+              href="/contact"
+              onClick={(e) => { e.preventDefault(); navigate('contact') }}
+              className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest text-white hover:bg-forest-dark"
+            >
+              Get in Touch
+            </a>
           </div>
         </div>
       </div>
@@ -1061,7 +1022,9 @@ function ContactPage() {
         <aside aria-label="Contact information">
           <div className="flex flex-col gap-8">
             <div>
-              <Eyebrow>Direct Contact</Eyebrow>
+              <h2 className="text-forest text-xs font-semibold tracking-widest uppercase mb-3">
+                Direct Contact
+              </h2>
               <div className="flex flex-col gap-4 text-sm">
                 <div>
                   <p className="font-medium text-ink mb-1">Email</p>
@@ -1080,7 +1043,9 @@ function ContactPage() {
             </div>
 
             <div className="border-t border-divider pt-6">
-              <Eyebrow>Free Consultation</Eyebrow>
+              <h2 className="text-forest text-xs font-semibold tracking-widest uppercase mb-3">
+                Free Consultation
+              </h2>
               <p className="text-sm text-slate leading-relaxed">
                 Not sure where to start? Book a free 30-minute call to discuss
                 your accessibility needs with no commitment required.
@@ -1088,7 +1053,9 @@ function ContactPage() {
             </div>
 
             <div className="border-t border-divider pt-6">
-              <Eyebrow>Location</Eyebrow>
+              <h2 className="text-forest text-xs font-semibold tracking-widest uppercase mb-3">
+                Location
+              </h2>
               <p className="text-sm text-slate leading-relaxed">
                 TrueNorth Accessibility LLC serves clients nationwide, working
                 remotely across all time zones.
