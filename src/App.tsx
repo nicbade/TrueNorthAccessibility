@@ -26,18 +26,27 @@ function pathToPage(pathname: string): Page {
 
 /* ─── Logo ────────────────────────────────────────────────────────────── */
 
-function Logo({ compact = false }: { compact?: boolean }) {
+function Logo({
+  compact = false,
+  title,
+}: {
+  compact?: boolean
+  title?: string
+}) {
   const w = compact ? 150 : 185
   const h = compact ? 49 : 60
+  const decorative = !title
   return (
     <svg
       width={w}
       height={h}
       viewBox="40 42 430 148"
       xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
+      role={decorative ? undefined : 'img'}
+      aria-hidden={decorative ? true : undefined}
       focusable="false"
     >
+      {title ? <title>{title}</title> : null}
       <circle cx="110" cy="110" r="70" fill="#1e3a5f" />
       <path
         d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z"
@@ -365,30 +374,35 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
     <footer className="border-t border-divider bg-cream" role="contentinfo">
       <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <Logo compact />
+          <Logo compact title="TrueNorth Accessibility" />
           <p className="text-xs text-slate mt-3 leading-relaxed">
             &copy; {new Date().getFullYear()} TrueNorth Accessibility LLC.
             <br />
             All rights reserved.
           </p>
         </div>
-        <nav aria-label="Footer navigation" className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-sm text-slate">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.page}
-              href={link.path}
-              onClick={(e) => { e.preventDefault(); navigate(link.page) }}
-              className="hover:text-ink rounded transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
-            href="mailto:truenorth.accessibilityllc@gmail.com"
-            className="hover:text-ink rounded transition-colors break-all"
-          >
-            truenorth.accessibilityllc@gmail.com
-          </a>
+        <nav aria-label="Footer" className="text-sm text-slate">
+          <ul className="flex flex-col sm:flex-row gap-4 sm:gap-6 list-none m-0 p-0">
+            {NAV_LINKS.map((link) => (
+              <li key={link.page}>
+                <a
+                  href={link.path}
+                  onClick={(e) => { e.preventDefault(); navigate(link.page) }}
+                  className="hover:text-ink rounded transition-colors"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a
+                href="mailto:truenorth.accessibilityllc@gmail.com"
+                className="hover:text-ink rounded transition-colors"
+              >
+                Email us
+              </a>
+            </li>
+          </ul>
         </nav>
       </div>
     </footer>
@@ -443,7 +457,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {SERVICES.slice(0, 4).map((service) => (
-            <article
+            <div
               key={service.id}
               className="border border-divider rounded-sm p-7 hover:border-forest transition-colors"
             >
@@ -456,9 +470,8 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
               >
                 Learn more
                 <span className="sr-only"> about {service.name}</span>
-                {' →'}
               </a>
-            </article>
+            </div>
           ))}
         </div>
         <div className="mt-8">
@@ -466,7 +479,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             onClick={() => navigate('services')}
             className="text-forest text-sm font-medium hover:underline rounded"
           >
-            View all six services →
+            View all six services
           </button>
         </div>
       </section>
@@ -487,16 +500,24 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
           your organization can speak confidently to legal, procurement, and
           regulatory requirements.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-14">
+        <dl className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-14">
           {STANDARDS.map((item) => (
             <div key={item.label} className="border border-divider rounded-sm p-5">
-              <p className="font-semibold text-ink text-sm mb-1">{item.label}</p>
-              <p className="text-xs text-slate">{item.desc}</p>
+              <dt className="font-semibold text-ink text-sm mb-1">{item.label}</dt>
+              <dd className="text-xs text-slate m-0">{item.desc}</dd>
             </div>
           ))}
-        </div>
-        <Eyebrow>Credentials</Eyebrow>
-        <ul className="flex flex-col gap-3" aria-label="Certifications">
+        </dl>
+        <h3
+          id="credentials-heading"
+          className="text-forest text-xs font-semibold tracking-widest uppercase mb-3"
+        >
+          Credentials
+        </h3>
+        <ul
+          className="flex flex-col gap-3"
+          aria-labelledby="credentials-heading"
+        >
           {CERTS.map((cert) => (
             <li key={cert.name} className="flex items-start gap-3 text-sm">
               <span
