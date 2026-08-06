@@ -215,7 +215,7 @@ function CTAButton({
   const styles =
     variant === 'primary'
       ? 'bg-forest text-white hover:bg-forest-dark'
-      : 'border border-divider text-ink hover:border-forest hover:text-forest'
+      : 'border border-slate text-ink hover:border-forest hover:text-forest'
   return (
     <button onClick={onClick} className={`${base} ${styles}`}>
       {children}
@@ -280,27 +280,32 @@ function Nav({
         </a>
 
         {/* Desktop nav */}
-        <nav aria-label="Main" className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.page}
-              href={link.path}
-              onClick={(e) => { e.preventDefault(); go(link.page) }}
-              aria-current={page === link.page ? 'page' : undefined}
-              className={`text-sm font-medium tracking-wide transition-colors rounded ${
-                page === link.page ? 'text-forest' : 'text-slate hover:text-ink'
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
-            href="/contact"
-            onClick={(e) => { e.preventDefault(); go('contact') }}
-            className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
-          >
-            Book a Consultation
-          </a>
+        <nav aria-label="Main" className="hidden md:block">
+          <ul className="flex items-center gap-8 list-none m-0 p-0">
+            {NAV_LINKS.map((link) => (
+              <li key={link.page}>
+                <a
+                  href={link.path}
+                  onClick={(e) => { e.preventDefault(); go(link.page) }}
+                  aria-current={page === link.page ? 'page' : undefined}
+                  className={`text-sm font-medium tracking-wide transition-colors rounded ${
+                    page === link.page ? 'text-forest' : 'text-slate hover:text-ink'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a
+                href="/contact"
+                onClick={(e) => { e.preventDefault(); go('contact') }}
+                className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
+              >
+                Book a Consultation
+              </a>
+            </li>
+          </ul>
         </nav>
 
         {/* Mobile hamburger */}
@@ -339,28 +344,33 @@ function Nav({
         <div
           id="mobile-menu"
           ref={menuRef}
-          className="md:hidden border-t border-divider bg-cream px-6 py-5 flex flex-col gap-4"
+          className="md:hidden border-t border-divider bg-cream px-6 py-5"
         >
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.page}
-              href={link.path}
-              onClick={(e) => { e.preventDefault(); go(link.page) }}
-              aria-current={page === link.page ? 'page' : undefined}
-              className={`text-sm font-medium py-1 rounded ${
-                page === link.page ? 'text-forest' : 'text-ink'
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
-            href="/contact"
-            onClick={(e) => { e.preventDefault(); go('contact') }}
-            className="px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center"
-          >
-            Book a Consultation
-          </a>
+          <ul className="flex flex-col gap-4 list-none m-0 p-0">
+            {NAV_LINKS.map((link) => (
+              <li key={link.page}>
+                <a
+                  href={link.path}
+                  onClick={(e) => { e.preventDefault(); go(link.page) }}
+                  aria-current={page === link.page ? 'page' : undefined}
+                  className={`text-sm font-medium py-1 rounded ${
+                    page === link.page ? 'text-forest' : 'text-ink'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a
+                href="/contact"
+                onClick={(e) => { e.preventDefault(); go('contact') }}
+                className="inline-block px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center"
+              >
+                Book a Consultation
+              </a>
+            </li>
+          </ul>
         </div>
       )}
     </header>
@@ -374,7 +384,7 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
     <footer className="border-t border-divider bg-cream" role="contentinfo">
       <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <Logo compact title="TrueNorth Accessibility" />
+          <Logo compact title="TrueNorth Accessibility logo" />
           <p className="text-xs text-slate mt-3 leading-relaxed">
             &copy; {new Date().getFullYear()} TrueNorth Accessibility LLC.
             <br />
@@ -475,12 +485,13 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
           ))}
         </div>
         <div className="mt-8">
-          <button
-            onClick={() => navigate('services')}
+          <a
+            href="/services"
+            onClick={(e) => { e.preventDefault(); navigate('services') }}
             className="text-forest text-sm font-medium hover:underline rounded"
           >
             View all six services
-          </button>
+          </a>
         </div>
       </section>
 
@@ -500,7 +511,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
           your organization can speak confidently to legal, procurement, and
           regulatory requirements.
         </p>
-        <dl className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-14">
+        <dl className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {STANDARDS.map((item) => (
             <div key={item.label} className="border border-divider rounded-sm p-5">
               <dt className="font-semibold text-ink text-sm mb-1">{item.label}</dt>
@@ -508,32 +519,6 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             </div>
           ))}
         </dl>
-        <h3
-          id="credentials-heading"
-          className="text-forest text-xs font-semibold tracking-widest uppercase mb-3"
-        >
-          Credentials
-        </h3>
-        <ul
-          className="flex flex-col gap-3"
-          aria-labelledby="credentials-heading"
-        >
-          {CERTS.map((cert) => (
-            <li key={cert.name} className="flex items-start gap-3 text-sm">
-              <span
-                className="mt-1.5 w-1.5 h-1.5 flex-shrink-0 rounded-full bg-forest"
-                aria-hidden="true"
-              />
-              <span>
-                <span className="font-medium text-ink">{cert.name}</span>
-                <span className="text-slate">
-                  {' '}
-                  · {cert.org}, {cert.year}
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <Divider />
