@@ -16,6 +16,41 @@ const PAGE_TITLES: Record<Page, string> = {
   contact: 'Contact | True North Accessibility',
 }
 
+const PAGE_DESCRIPTIONS: Record<Page, string> = {
+  home: 'Digital accessibility consulting for WCAG, ADA, and Section 508. Audits, assistive technology testing, training, and strategy that make digital products work for everyone.',
+  services: 'WCAG auditing, assistive technology testing, AR/VR accessibility, advisory, training, and policy services from TrueNorth Accessibility.',
+  about: 'Meet Nic Bade and the TrueNorth Accessibility approach to building digital experiences that work for everyone.',
+  contact: 'Book a free 30-minute accessibility consultation or contact TrueNorth Accessibility about audits, testing, training, and strategy.',
+}
+
+const SITE_ORIGIN = 'https://truenorth-accessibility.com'
+
+function upsertMeta(selector: string, attrs: Record<string, string>) {
+  let el = document.head.querySelector(selector) as HTMLMetaElement | HTMLLinkElement | null
+  if (!el) {
+    const tag = attrs.rel ? 'link' : 'meta'
+    el = document.createElement(tag)
+    document.head.appendChild(el)
+  }
+  for (const [key, value] of Object.entries(attrs)) {
+    el.setAttribute(key, value)
+  }
+}
+
+function syncDocumentMeta(page: Page) {
+  const title = PAGE_TITLES[page]
+  const description = PAGE_DESCRIPTIONS[page]
+  const url = `${SITE_ORIGIN}${PAGE_PATHS[page]}`
+
+  document.title = title
+  upsertMeta('meta[name="description"]', { name: 'description', content: description })
+  upsertMeta('meta[property="og:title"]', { property: 'og:title', content: title })
+  upsertMeta('meta[property="og:description"]', { property: 'og:description', content: description })
+  upsertMeta('meta[property="og:url"]', { property: 'og:url', content: url })
+  upsertMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: title })
+  upsertMeta('link[rel="canonical"]', { rel: 'canonical', href: url })
+}
+
 function pathToPage(pathname: string): Page {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   const entry = (Object.entries(PAGE_PATHS) as [Page, string][]).find(
@@ -660,7 +695,7 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
             </p>
             <p className="text-slate leading-relaxed">
               Before founding TrueNorth Accessibility, Nic spent years as a
-              full-stack software engineer, building the intuition for where
+              full-stack software engineer and accessibility consultant, building the intuition for where
               accessibility breaks down in real codebases and why it is so much
               cheaper to get it right upfront.
             </p>
@@ -1075,7 +1110,7 @@ export default function App() {
   const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    document.title = PAGE_TITLES[page]
+    syncDocumentMeta(page)
   }, [page])
 
   useEffect(() => {

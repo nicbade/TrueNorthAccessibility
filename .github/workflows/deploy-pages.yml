@@ -28,8 +28,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      # SPA fallback so /services, /about, /contact resolve on refresh
-      - run: cp dist/index.html dist/404.html
+      # SPA routes as real directories so GitHub Pages returns HTTP 200 (not 404.html)
+      - run: |
+          cp dist/index.html dist/404.html
+          for route in services about contact; do
+            mkdir -p "dist/$route"
+            cp dist/index.html "dist/$route/index.html"
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

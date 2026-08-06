@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 42 140 140" role="img">
+  <title>TrueNorth Accessibility</title>
+  <circle cx="110" cy="110" r="70" fill="#1e3a5f"/>
+  <path d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z" fill="#ffffff"/>
+  <circle cx="110" cy="110" r="10" fill="#1e3a5f"/>
+</svg>

@@ -131,7 +131,9 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
           tags.push({ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' })
         }
         if (favicon) {
-          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon }, injectTo: 'head' })
+          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon, type: 'image/svg+xml' }, injectTo: 'head' })
+          tags.push({ tag: 'link', attrs: { rel: 'icon', href: '/favicon.ico', sizes: '32x32' }, injectTo: 'head' })
+          tags.push({ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }, injectTo: 'head' })
         }
         if (title) {
           tags.push({ tag: 'meta', attrs: { property: 'og:title', content: title }, injectTo: 'head' })
@@ -139,10 +141,14 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
         if (description) {
           tags.push({ tag: 'meta', attrs: { property: 'og:description', content: description }, injectTo: 'head' })
         }
+        tags.push({ tag: 'meta', attrs: { property: 'og:type', content: 'website' }, injectTo: 'head' })
+        tags.push({ tag: 'meta', attrs: { property: 'og:url', content: 'https://truenorth-accessibility.com/' }, injectTo: 'head' })
+        tags.push({ tag: 'link', attrs: { rel: 'canonical', href: 'https://truenorth-accessibility.com/' }, injectTo: 'head' })
         if (socialImage) {
           tags.push(
             { tag: 'meta', attrs: { property: 'og:image', content: socialImage }, injectTo: 'head' },
             { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' }, injectTo: 'head' },
+            { tag: 'meta', attrs: { name: 'twitter:title', content: title }, injectTo: 'head' },
             { tag: 'meta', attrs: { name: 'twitter:image', content: socialImage }, injectTo: 'head' },
           )
         }

@@ -1,7 +1,15 @@
 {
-  "description": "Provides an accessible, WCAG 2.2 AA-compliant website tailored for LLCs to showcase services and enhance professional online presence.",
+  "title": "TrueNorth Accessibility",
+  "description": "Digital accessibility consulting for WCAG, ADA, and Section 508. Audits, assistive technology testing, training, and strategy that make digital products work for everyone.",
+  "language": "en",
   "robots": {
-    "index": false
+    "index": true
+  },
+  "icons": {
+    "icon": "/favicon.svg"
+  },
+  "openGraph": {
+    "image": "https://truenorth-accessibility.com/og-image.png"
   },
   "accessibility": {
     "addBypassLinks": false,
