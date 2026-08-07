@@ -445,7 +445,7 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
             ))}
             <li>
               <a
-                href="mailto:truenorth.accessibilityllc@gmail.com"
+                href="mailto:hello@truenorth-accessibility.com"
                 className="hover:text-ink rounded transition-colors"
               >
                 Email us
@@ -862,7 +862,7 @@ function ContactPage() {
             Thanks for reaching out. Nic will review your message and follow up
             at{' '}
             <strong className="text-ink font-medium">
-              truenorth.accessibilityllc@gmail.com
+              hello@truenorth-accessibility.com
             </strong>{' '}
             within one to two business days.
           </p>
@@ -1064,10 +1064,10 @@ function ContactPage() {
                 <div>
                   <p className="font-medium text-ink mb-1">Email</p>
                   <a
-                    href="mailto:truenorth.accessibilityllc@gmail.com"
+                    href="mailto:hello@truenorth-accessibility.com"
                     className="text-slate hover:text-forest rounded transition-colors break-all"
                   >
-                    truenorth.accessibilityllc@gmail.com
+                    hello@truenorth-accessibility.com
                   </a>
                 </div>
                 <div>

@@ -54,7 +54,7 @@ Nic builds digital experiences that work for everyone. He's passionate about acc
 
 He gets it firsthand: Nic has mild dyslexia and uses a screen reader for technical reading, since hearing and reading text together helps him process information. That personal connection goes back further — he used to read aloud to his grandfather after he lost his sight later in life, a memory that still shapes why this work matters to him.
 
-**Contact:** truenorth.accessibilityllc@gmail.com
+**Contact:** hello@truenorth-accessibility.com
 
 **Credentials & certifications:**
 - Innovation Strategy Certificate — Cornell University, 2026
