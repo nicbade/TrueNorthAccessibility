@@ -1,6 +1,23 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 
 type Page = 'home' | 'services' | 'about' | 'contact'
+type Theme = 'light' | 'dark'
+
+const THEME_STORAGE_KEY = 'tn-theme'
+
+function getPreferredTheme(): Theme {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    /* ignore */
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+}
 
 const PAGE_PATHS: Record<Page, string> = {
   home: '/',
@@ -64,13 +81,20 @@ function pathToPage(pathname: string): Page {
 function Logo({
   compact = false,
   title,
+  dark = false,
 }: {
   compact?: boolean
   title?: string
+  dark?: boolean
 }) {
   const w = compact ? 150 : 185
   const h = compact ? 49 : 60
   const decorative = !title
+  /* on-white: navy mark; on-black: white mark for dark backgrounds */
+  const circle = dark ? '#ffffff' : '#1e3a5f'
+  const star = dark ? '#000000' : '#ffffff'
+  const wordmark = dark ? '#ffffff' : '#1e3a5f'
+  const tagline = dark ? '#b8b8b8' : '#595959'
   return (
     <svg
       width={w}
@@ -82,19 +106,19 @@ function Logo({
       focusable="false"
     >
       {title ? <title>{title}</title> : null}
-      <circle cx="110" cy="110" r="70" fill="#1e3a5f" />
+      <circle cx="110" cy="110" r="70" fill={circle} />
       <path
         d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z"
-        fill="#ffffff"
+        fill={star}
       />
-      <circle cx="110" cy="110" r="10" fill="#1e3a5f" />
+      <circle cx="110" cy="110" r="10" fill={circle} />
       <text
         x="210"
         y="100"
         fontFamily="Arial, sans-serif"
         fontSize="42"
         fontWeight="700"
-        fill="#1e3a5f"
+        fill={wordmark}
       >
         TrueNorth
       </text>
@@ -105,11 +129,52 @@ function Logo({
         fontSize="24"
         fontWeight="400"
         letterSpacing="2"
-        fill="#595959"
+        fill={tagline}
       >
         ACCESSIBILITY
       </text>
     </svg>
+  )
+}
+
+function ThemeToggle({
+  theme,
+  onToggle,
+}: {
+  theme: Theme
+  onToggle: () => void
+}) {
+  const isDark = theme === 'dark'
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={isDark}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="p-2 rounded text-slate hover:text-ink transition-colors"
+    >
+      {isDark ? (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
   )
 }
 
@@ -272,13 +337,18 @@ const LEARN_URL = 'https://learn.truenorth-accessibility.com'
 function Nav({
   page,
   navigate,
+  theme,
+  onToggleTheme,
 }: {
   page: Page
   navigate: (p: Page) => void
+  theme: Theme
+  onToggleTheme: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const dark = theme === 'dark'
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -312,7 +382,7 @@ function Nav({
           onClick={(e) => { e.preventDefault(); go('home') }}
           className="rounded"
         >
-          <Logo />
+          <Logo dark={dark} />
           <span className="sr-only">TrueNorth Accessibility, Home</span>
         </a>
 
@@ -344,6 +414,9 @@ function Nav({
               </a>
             </li>
             <li>
+              <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+            </li>
+            <li>
               <a
                 href="/contact"
                 onClick={(e) => { e.preventDefault(); go('contact') }}
@@ -355,35 +428,38 @@ function Nav({
           </ul>
         </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          ref={hamburgerRef}
-          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-expanded={menuOpen}
-          aria-controls="mobile-menu"
-          onClick={() => setMenuOpen((o) => !o)}
-          className="md:hidden p-2 rounded text-ink hover:text-forest transition-colors"
-        >
-          {menuOpen ? (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M18 6L6 18M6 6l12 12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M4 6h16M4 12h16M4 18h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          )}
-        </button>
+        {/* Mobile controls */}
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <button
+            ref={hamburgerRef}
+            aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="p-2 rounded text-ink hover:text-forest transition-colors"
+          >
+            {menuOpen ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M4 6h16M4 12h16M4 18h16"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -436,12 +512,18 @@ function Nav({
 
 /* ─── Footer ──────────────────────────────────────────────────────────── */
 
-function Footer({ navigate }: { navigate: (p: Page) => void }) {
+function Footer({
+  navigate,
+  theme,
+}: {
+  navigate: (p: Page) => void
+  theme: Theme
+}) {
   return (
     <footer className="border-t border-divider bg-cream" role="contentinfo">
       <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <Logo compact title="TrueNorth Accessibility logo" />
+          <Logo compact title="TrueNorth Accessibility logo" dark={theme === 'dark'} />
           <p className="text-xs text-slate mt-3 leading-relaxed">
             &copy; {new Date().getFullYear()} TrueNorth Accessibility LLC.
             <br />
@@ -706,6 +788,15 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
             >
               Nic Bade, Accessibility Consultant
             </h2>
+            <p className="text-sm text-slate -mt-2">
+              <a
+                href="https://nicbade.com"
+                className="text-forest font-medium hover:underline rounded"
+                rel="noopener noreferrer"
+              >
+                nicbade.com
+              </a>
+            </p>
             <p className="text-slate leading-relaxed">
               Nic builds digital experiences that work for everyone. He's
               passionate about accessibility, not just as a job, but as a way to
@@ -727,7 +818,7 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
             </p>
           </div>
 
-          {/* Decorative navy mark */}
+          {/* Decorative mark */}
           <div
             aria-hidden="true"
             className="hidden md:flex items-start pt-2"
@@ -739,13 +830,14 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
                 height="80"
                 xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
+                className="brand-mark"
               >
-                <circle cx="110" cy="110" r="70" fill="#1e3a5f" />
+                <circle cx="110" cy="110" r="70" className="brand-mark__circle" />
                 <path
                   d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z"
-                  fill="#ffffff"
+                  className="brand-mark__star"
                 />
-                <circle cx="110" cy="110" r="10" fill="#1e3a5f" />
+                <circle cx="110" cy="110" r="10" className="brand-mark__center" />
               </svg>
             </div>
           </div>
@@ -908,7 +1000,7 @@ function ContactPage() {
 
   const inputClass = (field: string) =>
     `w-full px-4 py-3 border rounded-sm bg-cream text-ink text-sm transition-colors ${
-      errors[field] ? 'border-red-400' : 'border-divider'
+      errors[field] ? 'border-danger-border' : 'border-divider'
     }`
 
   return (
@@ -930,12 +1022,12 @@ function ContactPage() {
               tabIndex={-1}
               role="alert"
               aria-live="assertive"
-              className="mb-6 p-4 border border-red-300 bg-red-50 rounded-sm outline-none"
+              className="mb-6 p-4 border border-danger-border bg-danger-bg rounded-sm outline-none"
             >
-              <p className="font-medium text-red-700 text-sm mb-2">
+              <p className="font-medium text-danger-text text-sm mb-2">
                 Please correct the following before submitting:
               </p>
-              <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+              <ul className="list-disc list-inside text-sm text-danger-text space-y-1">
                 {Object.values(errors).map((err) => (
                   <li key={err}>{err}</li>
                 ))}
@@ -949,7 +1041,7 @@ function ContactPage() {
               <div>
                 <label htmlFor="f-name" className="block text-sm font-medium text-ink mb-1.5">
                   Full Name{' '}
-                  <span aria-hidden="true" className="text-red-600">
+                  <span aria-hidden="true" className="text-danger-text">
                     *
                   </span>
                   <span className="sr-only">(required)</span>
@@ -967,7 +1059,7 @@ function ContactPage() {
                   autoComplete="name"
                 />
                 {errors.name && (
-                  <p id="err-name" className="mt-1.5 text-xs text-red-700" role="alert">
+                  <p id="err-name" className="mt-1.5 text-xs text-danger-text" role="alert">
                     {errors.name}
                   </p>
                 )}
@@ -977,7 +1069,7 @@ function ContactPage() {
               <div>
                 <label htmlFor="f-email" className="block text-sm font-medium text-ink mb-1.5">
                   Email Address{' '}
-                  <span aria-hidden="true" className="text-red-600">
+                  <span aria-hidden="true" className="text-danger-text">
                     *
                   </span>
                   <span className="sr-only">(required)</span>
@@ -995,7 +1087,7 @@ function ContactPage() {
                   autoComplete="email"
                 />
                 {errors.email && (
-                  <p id="err-email" className="mt-1.5 text-xs text-red-700" role="alert">
+                  <p id="err-email" className="mt-1.5 text-xs text-danger-text" role="alert">
                     {errors.email}
                   </p>
                 )}
@@ -1043,7 +1135,7 @@ function ContactPage() {
               <div>
                 <label htmlFor="f-message" className="block text-sm font-medium text-ink mb-1.5">
                   Message{' '}
-                  <span aria-hidden="true" className="text-red-600">
+                  <span aria-hidden="true" className="text-danger-text">
                     *
                   </span>
                   <span className="sr-only">(required)</span>
@@ -1061,7 +1153,7 @@ function ContactPage() {
                   placeholder="Tell us a bit about your project or what you're looking for…"
                 />
                 {errors.message && (
-                  <p id="err-message" className="mt-1.5 text-xs text-red-700" role="alert">
+                  <p id="err-message" className="mt-1.5 text-xs text-danger-text" role="alert">
                     {errors.message}
                   </p>
                 )}
@@ -1133,7 +1225,17 @@ function ContactPage() {
 
 export default function App() {
   const [page, setPage] = useState<Page>(() => pathToPage(window.location.pathname))
+  const [theme, setTheme] = useState<Theme>(() => getPreferredTheme())
   const mainRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    applyTheme(theme)
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme)
+    } catch {
+      /* ignore */
+    }
+  }, [theme])
 
   useEffect(() => {
     syncDocumentMeta(page)
@@ -1150,6 +1252,10 @@ export default function App() {
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
+  const toggleTheme = () => {
+    setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+  }
 
   const navigate = (to: Page) => {
     const path = PAGE_PATHS[to]
@@ -1175,7 +1281,7 @@ export default function App() {
         Skip to main content
       </a>
 
-      <Nav page={page} navigate={navigate} />
+      <Nav page={page} navigate={navigate} theme={theme} onToggleTheme={toggleTheme} />
 
       <main
         id="main-content"
@@ -1189,7 +1295,7 @@ export default function App() {
         {page === 'contact' && <ContactPage />}
       </main>
 
-      <Footer navigate={navigate} />
+      <Footer navigate={navigate} theme={theme} />
     </div>
   )
 }

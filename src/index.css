@@ -5,24 +5,59 @@
   --font-serif: 'Lora', Georgia, serif;
   --font-sans: 'Work Sans', system-ui, sans-serif;
 
-  --color-cream: #F5F3EF;
-  --color-ink: #2C2C2A;
-  --color-forest: #2A5C1E;
-  --color-forest-dark: #1E4415;
-  --color-slate: #595959;
-  --color-divider: #D9D5CD;
-  --color-surface: #EDEAE3;
+  --color-cream: var(--tn-cream);
+  --color-ink: var(--tn-ink);
+  --color-forest: var(--tn-forest);
+  --color-forest-dark: var(--tn-forest-dark);
+  --color-slate: var(--tn-slate);
+  --color-divider: var(--tn-divider);
+  --color-surface: var(--tn-surface);
+  --color-danger-bg: var(--tn-danger-bg);
+  --color-danger-border: var(--tn-danger-border);
+  --color-danger-text: var(--tn-danger-text);
+}
+
+:root {
+  --tn-cream: #F5F3EF;
+  --tn-ink: #2C2C2A;
+  --tn-forest: #2A5C1E;
+  --tn-forest-dark: #1E4415;
+  --tn-slate: #595959;
+  --tn-divider: #D9D5CD;
+  --tn-surface: #EDEAE3;
+  --tn-danger-bg: #FEF2F2;
+  --tn-danger-border: #FCA5A5;
+  --tn-danger-text: #B91C1C;
 
   /* Focus ring pair — each ≥ 3:1 against the other's typical adjacent bg
      forest↔cream ≈ 7.2:1 */
   --focus-ring: #2A5C1E;
   --focus-halo: #F5F3EF;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --tn-cream: #161513;
+  --tn-ink: #F0EDE8;
+  --tn-forest: #6BA85C;
+  --tn-forest-dark: #5A944C;
+  --tn-slate: #A3A09A;
+  --tn-divider: #3D3A35;
+  --tn-surface: #242220;
+  --tn-danger-bg: #3B1C1C;
+  --tn-danger-border: #7F1D1D;
+  --tn-danger-text: #FCA5A5;
+
+  /* Focus pair on dark surfaces */
+  --focus-ring: #6BA85C;
+  --focus-halo: #161513;
+  color-scheme: dark;
 }
 
 @layer base {
   html {
-    background-color: #F5F3EF;
-    color: #2C2C2A;
+    background-color: var(--tn-cream);
+    color: var(--tn-ink);
     font-family: 'Work Sans', system-ui, sans-serif;
   }
 
@@ -52,7 +87,24 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #D9D5CD;
+    background: var(--tn-divider);
     border-radius: 3px;
+  }
+
+  /* Brand mark — light vs dark (on-black) */
+  .brand-mark__circle,
+  .brand-mark__center {
+    fill: #1e3a5f;
+  }
+  .brand-mark__star {
+    fill: #ffffff;
+  }
+
+  [data-theme='dark'] .brand-mark__circle,
+  [data-theme='dark'] .brand-mark__center {
+    fill: #ffffff;
+  }
+  [data-theme='dark'] .brand-mark__star {
+    fill: #000000;
   }
 }
