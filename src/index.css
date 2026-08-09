@@ -9,6 +9,9 @@
   --color-ink: var(--tn-ink);
   --color-forest: var(--tn-forest);
   --color-forest-dark: var(--tn-forest-dark);
+  /* Solid fills for buttons / chips — white text ≥ 4.5:1 in both themes */
+  --color-forest-btn: var(--tn-forest-btn);
+  --color-forest-btn-hover: var(--tn-forest-btn-hover);
   --color-slate: var(--tn-slate);
   --color-divider: var(--tn-divider);
   --color-surface: var(--tn-surface);
@@ -22,6 +25,8 @@
   --tn-ink: #2C2C2A;
   --tn-forest: #2A5C1E;
   --tn-forest-dark: #1E4415;
+  --tn-forest-btn: #2A5C1E;
+  --tn-forest-btn-hover: #1E4415;
   --tn-slate: #595959;
   --tn-divider: #D9D5CD;
   --tn-surface: #EDEAE3;
@@ -36,21 +41,28 @@
   color-scheme: light;
 }
 
+/*
+ * Dark theme — WCAG 2.2 AA targets:
+ * text ≥ 4.5:1, UI components / focus / borders ≥ 3:1
+ * forest (text accent) is lighter; forest-btn stays brand-dark for white labels
+ */
 [data-theme='dark'] {
   --tn-cream: #161513;
   --tn-ink: #F0EDE8;
   --tn-forest: #6BA85C;
   --tn-forest-dark: #5A944C;
+  --tn-forest-btn: #2A5C1E;
+  --tn-forest-btn-hover: #1E4415;
   --tn-slate: #A3A09A;
-  --tn-divider: #3D3A35;
+  --tn-divider: #75706A;
   --tn-surface: #242220;
   --tn-danger-bg: #3B1C1C;
-  --tn-danger-border: #7F1D1D;
+  --tn-danger-border: #E07070;
   --tn-danger-text: #FCA5A5;
 
-  /* Focus pair on dark surfaces */
-  --focus-ring: #6BA85C;
-  --focus-halo: #161513;
+  /* Light ring + white halo: ≥ 3:1 on cream, surface, and forest-btn */
+  --focus-ring: #F0EDE8;
+  --focus-halo: #FFFFFF;
   color-scheme: dark;
 }
 

@@ -314,7 +314,7 @@ function CTAButton({
     'inline-block px-6 py-3 text-sm font-medium rounded transition-colors'
   const styles =
     variant === 'primary'
-      ? 'bg-forest text-white hover:bg-forest-dark'
+      ? 'bg-forest-btn text-white hover:bg-forest-btn-hover'
       : 'border border-slate text-ink hover:border-forest hover:text-forest'
   return (
     <button onClick={onClick} className={`${base} ${styles}`}>
@@ -420,7 +420,7 @@ function Nav({
               <a
                 href="/contact"
                 onClick={(e) => { e.preventDefault(); go('contact') }}
-                className="ml-2 px-4 py-2 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
+                className="ml-2 px-4 py-2 bg-forest-btn text-white text-sm font-medium rounded hover:bg-forest-btn-hover transition-colors"
               >
                 Book a Consultation
               </a>
@@ -498,7 +498,7 @@ function Nav({
               <a
                 href="/contact"
                 onClick={(e) => { e.preventDefault(); go('contact') }}
-                className="inline-block px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center"
+                className="inline-block px-4 py-2 bg-forest-btn text-white text-sm font-medium rounded text-center"
               >
                 Book a Consultation
               </a>
@@ -758,7 +758,7 @@ function ServicesPage({ navigate }: { navigate: (p: Page) => void }) {
           <a
             href="/contact"
             onClick={(e) => { e.preventDefault(); navigate('contact') }}
-            className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest text-white hover:bg-forest-dark"
+            className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest-btn text-white hover:bg-forest-btn-hover"
           >
             Book a Free Consultation
           </a>
@@ -897,7 +897,7 @@ function AboutPage({ navigate }: { navigate: (p: Page) => void }) {
             <a
               href="/contact"
               onClick={(e) => { e.preventDefault(); navigate('contact') }}
-              className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest text-white hover:bg-forest-dark"
+              className="inline-block px-6 py-3 text-sm font-medium rounded transition-colors bg-forest-btn text-white hover:bg-forest-btn-hover"
             >
               Get in Touch
             </a>
@@ -962,7 +962,7 @@ function ContactPage() {
           className="bg-surface border border-divider rounded-sm p-12 max-w-xl outline-none"
         >
           <div
-            className="w-10 h-10 rounded-full bg-forest flex items-center justify-center mb-6"
+            className="w-10 h-10 rounded-full bg-forest-btn flex items-center justify-center mb-6"
             aria-hidden="true"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -1162,7 +1162,7 @@ function ContactPage() {
               <div>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-forest text-white text-sm font-medium rounded hover:bg-forest-dark transition-colors"
+                  className="px-6 py-3 bg-forest-btn text-white text-sm font-medium rounded hover:bg-forest-btn-hover transition-colors"
                 >
                   Send Message
                 </button>
@@ -1276,7 +1276,7 @@ export default function App() {
       <a
         href="#main-content"
         onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-forest focus:text-white focus:rounded"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-forest-btn focus:text-white focus:rounded"
       >
         Skip to main content
       </a>
