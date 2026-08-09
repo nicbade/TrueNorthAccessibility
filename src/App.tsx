@@ -267,6 +267,8 @@ const NAV_LINKS: { label: string; page: Page; path: string }[] = [
   { label: 'Contact', page: 'contact', path: '/contact' },
 ]
 
+const LEARN_URL = 'https://learn.truenorth-accessibility.com'
+
 function Nav({
   page,
   navigate,
@@ -333,6 +335,14 @@ function Nav({
                 </a>
               </li>
             ))}
+            <li>
+              <a
+                href={LEARN_URL}
+                className="text-sm font-medium tracking-wide text-slate hover:text-ink transition-colors rounded"
+              >
+                Learn
+              </a>
+            </li>
             <li>
               <a
                 href="/contact"
@@ -402,6 +412,14 @@ function Nav({
             ))}
             <li>
               <a
+                href={LEARN_URL}
+                className="text-sm font-medium py-1 text-ink rounded"
+              >
+                Learn
+              </a>
+            </li>
+            <li>
+              <a
                 href="/contact"
                 onClick={(e) => { e.preventDefault(); go('contact') }}
                 className="inline-block px-4 py-2 bg-forest text-white text-sm font-medium rounded text-center"
@@ -443,6 +461,14 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
                 </a>
               </li>
             ))}
+            <li>
+              <a
+                href={LEARN_URL}
+                className="hover:text-ink rounded transition-colors"
+              >
+                Learn
+              </a>
+            </li>
             <li>
               <a
                 href="mailto:hello@truenorth-accessibility.com"
