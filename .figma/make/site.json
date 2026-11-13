@@ -11,6 +11,9 @@
   "openGraph": {
     "image": "https://truenorth-accessibility.com/og-image.png"
   },
+  "analytics": {
+    "googleAnalyticsId": "G-S70J8CNNCX"
+  },
   "accessibility": {
     "addBypassLinks": false,
     "ignoreReducedMotion": false

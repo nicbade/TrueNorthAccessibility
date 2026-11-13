@@ -1241,6 +1241,22 @@ export default function App() {
     syncDocumentMeta(page)
   }, [page])
 
+  const skipInitialPageView = useRef(true)
+  useEffect(() => {
+    if (skipInitialPageView.current) {
+      skipInitialPageView.current = false
+      return
+    }
+    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag
+    if (!gtag) return
+    const path = PAGE_PATHS[page]
+    gtag('event', 'page_view', {
+      page_title: PAGE_TITLES[page],
+      page_path: path,
+      page_location: `${window.location.origin}${path}`,
+    })
+  }, [page])
+
   useEffect(() => {
     const onPopState = () => {
       setPage(pathToPage(window.location.pathname))
