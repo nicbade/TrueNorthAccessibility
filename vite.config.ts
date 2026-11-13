@@ -114,7 +114,7 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
     },
     transformIndexHtml: {
       order: 'pre',
-      handler(html) {
+      handler(html, ctx) {
         let result = html
         result = replaceHtmlCommentSlot(result, 'figma:lang', language)
         result = replaceHtmlCommentSlot(result, 'figma:title', escapeHtmlText(title))
@@ -124,6 +124,25 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
         result = replaceHtmlCommentSlot(result, 'figma:body-end', bodyEnd)
 
         const tags: HtmlTagDescriptor[] = []
+        // Production pages must not stay on http://. GitHub Pages redirects, but a
+        // VPN or intercepting proxy can strip that redirect and leave the contact
+        // form on an insecure origin, which is the browser "Not secure" warning.
+        tags.push({
+          tag: 'script',
+          children:
+            '(function(){var h=location.hostname;if(location.protocol==="http:"&&(h==="truenorth-accessibility.com"||h==="www.truenorth-accessibility.com")){location.replace("https://truenorth-accessibility.com"+location.pathname+location.search+location.hash);}})();',
+          injectTo: 'head-prepend',
+        })
+        if (!ctx?.server) {
+          tags.push({
+            tag: 'meta',
+            attrs: {
+              'http-equiv': 'Content-Security-Policy',
+              content: 'upgrade-insecure-requests',
+            },
+            injectTo: 'head-prepend',
+          })
+        }
         if (description) {
           tags.push({ tag: 'meta', attrs: { name: 'description', content: description }, injectTo: 'head' })
         }
