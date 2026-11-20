@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { lazy, Suspense, useState, useEffect, useRef, type FormEvent } from 'react'
+import Logo from './components/Logo'
+import ThemeToggle, { type Theme } from './components/ThemeToggle'
+import { isHubPath } from './audit/router'
+
+const AuditHub = lazy(() => import('./audit/AuditHub'))
 
 type Page = 'home' | 'services' | 'about' | 'contact'
-type Theme = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'tn-theme'
 
@@ -74,108 +78,6 @@ function pathToPage(pathname: string): Page {
     ([, path]) => path === normalized,
   )
   return entry?.[0] ?? 'home'
-}
-
-/* ─── Logo ────────────────────────────────────────────────────────────── */
-
-function Logo({
-  compact = false,
-  title,
-  dark = false,
-}: {
-  compact?: boolean
-  title?: string
-  dark?: boolean
-}) {
-  const w = compact ? 150 : 185
-  const h = compact ? 49 : 60
-  const decorative = !title
-  /* on-white: navy mark; on-black: white mark for dark backgrounds */
-  const circle = dark ? '#ffffff' : '#1e3a5f'
-  const star = dark ? '#000000' : '#ffffff'
-  const wordmark = dark ? '#ffffff' : '#1e3a5f'
-  const tagline = dark ? '#b8b8b8' : '#595959'
-  return (
-    <svg
-      width={w}
-      height={h}
-      viewBox="40 42 430 148"
-      xmlns="http://www.w3.org/2000/svg"
-      role={decorative ? undefined : 'img'}
-      aria-hidden={decorative ? true : undefined}
-      focusable="false"
-    >
-      {title ? <title>{title}</title> : null}
-      <circle cx="110" cy="110" r="70" fill={circle} />
-      <path
-        d="M110 50 L124 96 L170 110 L124 124 L110 170 L96 124 L50 110 L96 96 Z"
-        fill={star}
-      />
-      <circle cx="110" cy="110" r="10" fill={circle} />
-      <text
-        x="210"
-        y="100"
-        fontFamily="Arial, sans-serif"
-        fontSize="42"
-        fontWeight="700"
-        fill={wordmark}
-      >
-        TrueNorth
-      </text>
-      <text
-        x="210"
-        y="140"
-        fontFamily="Arial, sans-serif"
-        fontSize="24"
-        fontWeight="400"
-        letterSpacing="2"
-        fill={tagline}
-      >
-        ACCESSIBILITY
-      </text>
-    </svg>
-  )
-}
-
-function ThemeToggle({
-  theme,
-  onToggle,
-}: {
-  theme: Theme
-  onToggle: () => void
-}) {
-  const isDark = theme === 'dark'
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={isDark}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="p-2 rounded text-slate hover:text-ink transition-colors"
-    >
-      {isDark ? (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
-          <path
-            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-    </button>
-  )
 }
 
 /* ─── Data ────────────────────────────────────────────────────────────── */
@@ -1225,6 +1127,7 @@ function ContactPage() {
 
 export default function App() {
   const [page, setPage] = useState<Page>(() => pathToPage(window.location.pathname))
+  const [hub, setHub] = useState(() => isHubPath(window.location.pathname))
   const [theme, setTheme] = useState<Theme>(() => getPreferredTheme())
   const mainRef = useRef<HTMLElement>(null)
 
@@ -1238,12 +1141,13 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    syncDocumentMeta(page)
-  }, [page])
+    if (!hub) syncDocumentMeta(page)
+  }, [page, hub])
 
   useEffect(() => {
     const onPopState = () => {
       setPage(pathToPage(window.location.pathname))
+      setHub(isHubPath(window.location.pathname))
       requestAnimationFrame(() => {
         mainRef.current?.focus()
         window.scrollTo({ top: 0 })
@@ -1268,6 +1172,14 @@ export default function App() {
       mainRef.current?.focus()
       window.scrollTo({ top: 0, behavior: 'smooth' })
     })
+  }
+
+  if (hub) {
+    return (
+      <Suspense fallback={<p className="p-8 font-sans text-ink">Loading Audit Hub…</p>}>
+        <AuditHub theme={theme} onToggleTheme={toggleTheme} />
+      </Suspense>
+    )
   }
 
   return (

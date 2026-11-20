@@ -31,7 +31,7 @@ jobs:
       # SPA routes as real directories so GitHub Pages returns HTTP 200 (not 404.html)
       - run: |
           cp dist/index.html dist/404.html
-          for route in services about contact; do
+          for route in services about contact audit-hub; do
             mkdir -p "dist/$route"
             cp dist/index.html "dist/$route/index.html"
           done
