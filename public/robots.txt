@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /audit-hub
 
 Sitemap: https://truenorth-accessibility.com/sitemap.xml

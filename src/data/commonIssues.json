@@ -1,0 +1,3126 @@
+[
+  {
+    "id": "desktop-1",
+    "platform": "Desktop",
+    "number": 1,
+    "description": "The alert messages are not announced to screen reader users.",
+    "expectedBehavior": "Alert should announce when they appear for screen reader users.",
+    "fix": "Add a role=\"alert\" to the element that wraps the alert message. Ensure the role is present from the moment the element is created until it is destroyed. The role=\"alert\" will not work if it is added to an existing DOM element.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2",
+      "4.1.3"
+    ],
+    "category": "Alert",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN ARIA: alert role",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/alert_role"
+      }
+    ]
+  },
+  {
+    "id": "desktop-2",
+    "platform": "Desktop",
+    "number": 2,
+    "description": "This alert does not remain visible long enough for users with certain disabilities.",
+    "expectedBehavior": "",
+    "fix": "Ensure the alert remains visible for a minimum of 20 seconds, and that a button to extend the duraction is provided. Alternatively, allow the user to dismiss the alert, if this approach is used set focus to the alert when it appears.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2",
+      "4.1.4"
+    ],
+    "category": "Alert",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN ARIA: alert role",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/alert_role"
+      }
+    ]
+  },
+  {
+    "id": "desktop-3",
+    "platform": "Desktop",
+    "number": 3,
+    "description": "These links do not have an href, thus they do not receive keyboard focus and may not announce as links to screen reader users.",
+    "expectedBehavior": "Elements should announce as a link to screen reader users. Elements should receive keyboard tab focus and should be actionable for all users.",
+    "fix": "Add a valid href attribute.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-4",
+    "platform": "Desktop",
+    "number": 4,
+    "description": "This element is actionable for mouse users, but is not for keyboard users. It is also not announced as a link/button for screen reader users.",
+    "expectedBehavior": "Elements should announce as a link or button to screen reader users. Elements should receive keyboard tab focus and should be actionable for all users.",
+    "fix": "Mark this up as a <button> or <a>. Ensure it has a proper label.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-5",
+    "platform": "Desktop",
+    "number": 5,
+    "description": "This button is visually disabled, but still recieves keyboard focus.",
+    "expectedBehavior": "Element should not receive keyboard tab focus and should announce to screen readers as \"unavailable\".",
+    "fix": "Give the <button> tag a disabled attribute when they are not active or are in a visually disabled state.",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN HTML attribute: disabled",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/disabled"
+      }
+    ]
+  },
+  {
+    "id": "desktop-6",
+    "platform": "Desktop",
+    "number": 6,
+    "description": "This carousel is not accessible for keyboard and/or screen reader users.",
+    "expectedBehavior": "",
+    "fix": "A11y Design considerations:\n1. Must not auto-rotate slides on page load. A pause/play button should be added in a prominent place if slides have the ability to auto-rotate.\n2. Non-visible slide content must be hidden from screen reader users and removed from the tab order.\n3. Carousel must let the guest user know their current position in the carousel and the totle number of slides in the carousel. \n * Page dots or scroll bars are examples of how to do this.\n4. Carousels must have a heading at the beginning of the carousel.\n5. Previous and next buttons are required and should be labeled.",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Carousels",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Carousel with auto rotation",
+        "url": "https://codepen.io/nicbade/pen/QWmLZMj"
+      }
+    ]
+  },
+  {
+    "id": "desktop-7",
+    "platform": "Desktop",
+    "number": 7,
+    "description": "This text does not meet minimum color contrast ratio of 4.5:1.",
+    "expectedBehavior": "",
+    "fix": "Adjust the color contrast of the text and background color to a minimum of 4.5:1.",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.3"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Color Contrast",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast"
+      }
+    ]
+  },
+  {
+    "id": "desktop-8",
+    "platform": "Desktop",
+    "number": 8,
+    "description": "Elements lack a visible focus indicator.",
+    "expectedBehavior": "",
+    "fix": "Ensure a focus indicator is visibly present for every actionable element. Focus indicator color contrast ratio should have be a minimum of 3:1, Target ideal is a 4:1 color contrast ratio.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.7"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Keyboard - Focusable element must have focus styling",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Keyboard"
+      }
+    ]
+  },
+  {
+    "id": "desktop-9",
+    "platform": "Desktop",
+    "number": 9,
+    "description": "Focus is not moved into the modal dialog when it opens.",
+    "expectedBehavior": "",
+    "fix": "Set focus to the first element inside of the modal, typically a heading or close button",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.3"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Modal Dialogs",
+        "url": "https://codepen.io/nicbade/pen/yLvmqJE"
+      }
+    ]
+  },
+  {
+    "id": "desktop-10",
+    "platform": "Desktop",
+    "number": 10,
+    "description": "Form fields are not properly labeled.",
+    "expectedBehavior": "When a screen reader user navigates in forms mode (tab or shift+tab keys), the announcement will be (Form label, element type and then any instructions or errors). If the errors are not associated properly the label will not announce.",
+    "fix": "Form fields should visible labels which are associated to their field.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Text labels and names: Form elements must be labeled",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Text_labels_and_names"
+      }
+    ]
+  },
+  {
+    "id": "desktop-11",
+    "platform": "Desktop",
+    "number": 11,
+    "description": "This does not announce as a button or link for screen reader users.",
+    "expectedBehavior": "Should announce the button label then the word \"button\" or \"link\" when a screen reader user navigates to it.",
+    "fix": "Add screen reader only text or an aria-label attribute to each button/link which tells users where it goes and/or what it does.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.6"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-12",
+    "platform": "Desktop",
+    "number": 12,
+    "description": "Required form fields must be indicated to screen reader users.",
+    "expectedBehavior": "Form element should announce as required to screen reader users.",
+    "fix": "Add a \"required\" attribute to the required form element.",
+    "priority": "Major",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN HTML attribute: required",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/required"
+      }
+    ]
+  },
+  {
+    "id": "desktop-13",
+    "platform": "Desktop",
+    "number": 13,
+    "description": "The current <label> elements are not associated to their form elements.",
+    "expectedBehavior": "When a screen reader user navigates in forms mode (tab or shift+tab keys), the announcement will be (Form label, element type and then any instructions or errors). If the errors are not associated properly the label will not announce.",
+    "fix": "Add a \"for\" attribute to the <label> tag and associate it to the \"id\" of the form element it is meant to label.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Text labels and names: Form elements must be labeled",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Text_labels_and_names"
+      }
+    ]
+  },
+  {
+    "id": "desktop-14",
+    "platform": "Desktop",
+    "number": 14,
+    "description": "This form grouping lacks a fieldset and legend.",
+    "expectedBehavior": "When a screen reader user navigates in forms mode (tab or shift+tab keys), the legend will be announced when the user enters and exits the content wrapped in the fieldset.",
+    "fix": "Wrap the form grouping in a <fieldset> and <legend> . Ensure the <legend> is the first child element of the <fieldset>.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN <fieldset>: The Field Set element",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset"
+      }
+    ]
+  },
+  {
+    "id": "desktop-15",
+    "platform": "Desktop",
+    "number": 15,
+    "description": "This form field relys on placeholder text which disappears when a user enters text into the field. Form labels should always be visible.",
+    "expectedBehavior": "",
+    "fix": "Add a visible <label> and associate it to the form element.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Deque: The Anatomy of Accessible Forms: The Problem with Placeholders",
+        "url": "https://www.deque.com/blog/accessible-forms-the-problem-with-placeholders/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-16",
+    "platform": "Desktop",
+    "number": 16,
+    "description": "Form errors are only indicated by color.",
+    "expectedBehavior": "The form label should always be visible. When a screen reader user navigates in forms mode (tab or shift+tab keys), the announcement will be (Form label, element type and then any instructions or errors). If the errors are not associated properly the label will not announce.",
+    "fix": "Any field with an error must indicate that there is an error, and what the error is. An error state indicator such as color or a symbol must accompany the error message text. Associate the error message text with an aria-describedby attribute associated to the form field with the error.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Deque: The Anatomy of Accessible Forms: Error Messages",
+        "url": "https://www.deque.com/blog/anatomy-of-accessible-forms-error-messages/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-17",
+    "platform": "Desktop",
+    "number": 17,
+    "description": "Grouped form fields are not labeled properly.",
+    "expectedBehavior": "When a screen reader user navigates in forms mode (tab or shift+tab keys), the legend will be announced when the user enters and exits the content wrapped in the fieldset.",
+    "fix": "Each form field should have its own visible and properly associated label. This is common with Date of Birth Fields (Month, Day, Year).",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Webaim Creating Accessible Froms > Placeholder > Good example",
+        "url": "https://webaim.org/techniques/forms/advanced"
+      },
+      {
+        "kind": "External",
+        "label": "W3: Groups of Fields",
+        "url": "https://www.w3.org/WAI/EO/Drafts/tutorials/forms/groups/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-18",
+    "platform": "Desktop",
+    "number": 18,
+    "description": "This form does not present error messages when the form is submitted with errors.",
+    "expectedBehavior": "",
+    "fix": "Add visible error messages and associate them to the form field via an aria-describedby attribute.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Deque: The Anatomy of Accessible Forms: Error Messages",
+        "url": "https://www.deque.com/blog/anatomy-of-accessible-forms-error-messages/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-19",
+    "platform": "Desktop",
+    "number": 19,
+    "description": "Text that function as a heading should be marked up as a semantic heading.",
+    "expectedBehavior": "Text should announce as a heading, and should be reachable when screen reader users use heading hotkeys. Ensure heading levels are in a logical order.",
+    "fix": "Use a semantic heading tag and ensure it is in the proper heading level order.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Headings",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3: Headings",
+        "url": "https://www.w3.org/WAI/tutorials/page-structure/headings/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-20",
+    "platform": "Desktop",
+    "number": 20,
+    "description": "Page heading levels do not follow a logical order",
+    "expectedBehavior": "",
+    "fix": "Ensure there is a singular <h1> which defines the purpose of the page. Apply headings in the DOM in proper leveled order (h1, h2, h3, h4, h5, h6) using the level prop. Never use heading tags solely for visual style.",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Headings",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3: Headings",
+        "url": "https://www.w3.org/WAI/tutorials/page-structure/headings/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-21",
+    "platform": "Desktop",
+    "number": 21,
+    "description": "These are marked up as headings but they are not semantically headings.",
+    "expectedBehavior": "Heading semantics, styles, and structure should be the same for all guests",
+    "fix": "Remove the heading tags.",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Headings",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3: Headings",
+        "url": "https://www.w3.org/WAI/tutorials/page-structure/headings/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-22",
+    "platform": "Desktop",
+    "number": 22,
+    "description": "This icon is decorative/non-essential but is announced to screen reader users.",
+    "expectedBehavior": "Decorative and non-essential icons should be ignored by screen reader softwares.",
+    "fix": "Wrap the icon in a <span> and add an aria-hidden=\"true\" attribute, validate no other content is within the <span> with the hidden attribute.",
+    "priority": "Minor",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Icon",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-23",
+    "platform": "Desktop",
+    "number": 23,
+    "description": "Image has an inaccurate or incomplete alt attribute, causing the purpose of the image to be unclear to screen reader users.",
+    "expectedBehavior": "",
+    "fix": "Ensure the image conveys the image purpose in a clear and concise way via the image alt attribute.",
+    "priority": "Critical",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN <img>: The Image Embed element",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img"
+      }
+    ]
+  },
+  {
+    "id": "desktop-24",
+    "platform": "Desktop",
+    "number": 24,
+    "description": "This is a decorative image.",
+    "expectedBehavior": "",
+    "fix": "Give this image an empty alt (alt=\"\") attribute so screen readers ignore them.",
+    "priority": "Minor",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN <img>: The Image Embed element",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img"
+      }
+    ]
+  },
+  {
+    "id": "desktop-25",
+    "platform": "Desktop",
+    "number": 25,
+    "description": "This image lacks an alt attribute, thus it is not visible to screen reader users. They will likely hear the src address read out which is not sufficient.",
+    "expectedBehavior": "",
+    "fix": "Give this image a descriptive image alt attribute.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN <img>: The Image Embed element",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img"
+      }
+    ]
+  },
+  {
+    "id": "desktop-26",
+    "platform": "Desktop",
+    "number": 26,
+    "description": "These image links are not labeled properly.",
+    "expectedBehavior": "",
+    "fix": "Give the image an alt attribute which defines the purpose of the link",
+    "priority": "Blocker",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3C Functional Images",
+        "url": "https://www.w3.org/WAI/tutorials/images/functional/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-27",
+    "platform": "Desktop",
+    "number": 27,
+    "description": "Keyboard and/or Screen readers focus is not trapped within the modal dialog.",
+    "expectedBehavior": "",
+    "fix": "Ensure keyboard and screen reader focus is trapped within the modal.",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.7"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Harvard University: Technique: Accessible modal dialogs",
+        "url": "https://accessibility.huit.harvard.edu/technique-accessible-modal-dialogs"
+      }
+    ]
+  },
+  {
+    "id": "desktop-28",
+    "platform": "Desktop",
+    "number": 28,
+    "description": "Content appears on mouse hover, but it is inaccessible for keyboard and screen reader users.",
+    "expectedBehavior": "",
+    "fix": "Make all content reachable and visible to screen reader and keyboard users.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.13",
+      "2.1.1"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-29",
+    "platform": "Desktop",
+    "number": 29,
+    "description": "This element recieves tab focus, however it is not an actionable element. This can be confusing for keyboard and cognitive users.",
+    "expectedBehavior": "Ensure this element is actionable or that it does not receive keyboard tab focus.",
+    "fix": "Remove the tabindex attribute or set it to tabindex=\"-1\".",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "WebAIM - Keyboard Accessibility - Tabindex",
+        "url": "https://webaim.org/techniques/keyboard/tabindex"
+      }
+    ]
+  },
+  {
+    "id": "desktop-30",
+    "platform": "Desktop",
+    "number": 30,
+    "description": "This element traps a users focus.",
+    "expectedBehavior": "",
+    "fix": "Ensure that keyboard users are able to tab and shift+tab away from each element.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.2"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3: No Keyboard Trap",
+        "url": "https://www.w3.org/WAI/WCAG20/Understanding/no-keyboard-trap"
+      }
+    ]
+  },
+  {
+    "id": "desktop-31",
+    "platform": "Desktop",
+    "number": 31,
+    "description": "This content has infite scroll which makes it impossible for keyboard users to reach the footer.",
+    "expectedBehavior": "Must have a logical focus path when navigating the page with only a keyboard.\nThere must be a way to access static content that appears after the infinite scroll area (example: use a “show more” button to initiate the infinite scroll).\nFocus must seamlessly shift to the newly-loaded content.",
+    "fix": "A few options:\n* Disabled the infinite scroll feature\n* Paginate the content\n* Add a \"Load More\" button method. Be sure to set the user's focus to the first newly loaded element when the button is triggered.",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Deque: Infinite Scolling & Role=Feed Accessibility Issues",
+        "url": "https://www.deque.com/blog/infinite-scrolling-rolefeed-accessibility-issues/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-32",
+    "platform": "Desktop",
+    "number": 32,
+    "description": "Elements appear in an illogical tab order, which can be confusing for keyboard users.",
+    "expectedBehavior": "Ensure keyboard tab order goes from top/down and left/right. Keyboard tab order should be the same",
+    "fix": "Move the element in the DOM to ensure elements appear in a logical order for all users.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.2",
+      "2.4.3"
+    ],
+    "category": "Keyboard",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-33",
+    "platform": "Desktop",
+    "number": 33,
+    "description": "This should be marked up as a list. Lists inform screen reader users of where the list begins/ends and how many list items are present.",
+    "expectedBehavior": "The list will announce when a screen reader user enters and exits the list as well as how many list items there are.",
+    "fix": "Mark this up as a semantic HTML list, if a numbered list is ideal use an ordered list (ol).",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "List",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Princeton University: Digital Accessibility - Lists",
+        "url": "https://accessibility.princeton.edu/how/content/lists"
+      }
+    ]
+  },
+  {
+    "id": "desktop-34",
+    "platform": "Desktop",
+    "number": 34,
+    "description": "These are marked up as separate lists, however they are semantically a singular list.",
+    "expectedBehavior": "",
+    "fix": "Consolidate these into a singular list.",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "List",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Princeton University: Digital Accessibility - Lists",
+        "url": "https://accessibility.princeton.edu/how/content/lists"
+      }
+    ]
+  },
+  {
+    "id": "desktop-35",
+    "platform": "Desktop",
+    "number": 35,
+    "description": "Keyboard and/or Screen reader users are unable to close this modal dialog.",
+    "expectedBehavior": "All modals must close when the user presses the ESC key, and must have a button that closes the modal. Ideally the close button would sit at the end of the keyboard focus order. When a user closes or finishes interacting with the modal, then the focus returns to the element that opened the modal.",
+    "fix": "Provide a way to dismiss these with a visible close/dismiss/cancel button. Ideally, this would also include the \"esc\" key.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Modal Dialogs",
+        "url": "https://codepen.io/nicbade/pen/yLvmqJE"
+      }
+    ]
+  },
+  {
+    "id": "desktop-36",
+    "platform": "Desktop",
+    "number": 36,
+    "description": "When the page is resized to 200%, text truncates or is not present visually.",
+    "expectedBehavior": "",
+    "fix": "Ensure text is readable when zoomed up to 200%.",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.4"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3: Understanding 1.4.4: Resize",
+        "url": "https://www.w3.org/WAI/WCAG20/Understanding/resize-text"
+      }
+    ]
+  },
+  {
+    "id": "desktop-37",
+    "platform": "Desktop",
+    "number": 37,
+    "description": "This page lacks a \"Skip to main content\" link.",
+    "expectedBehavior": "",
+    "fix": "Add a link to the top of the page which allows a user to skip to the beginning of the <main> content. This link should be the first actionable element on the page, and should become visible when it receives focus. Ensure the target element is either a focusable element or add a tabindex=\"-1\" to the target element.",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "WebAIM - Skip Navigation Links",
+        "url": "https://webaim.org/techniques/skipnav/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-38",
+    "platform": "Desktop",
+    "number": 38,
+    "description": "This page lacks landmarks, making it difficult for screen reader users to navigate the page effectively.",
+    "expectedBehavior": "",
+    "fix": "Wrap the header in a <header>, navigation in a <nav>, main content in a <main> and footer in a <footer> tag.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3 - Accessibility Landmarks",
+        "url": "https://www.w3schools.com/accessibility/accessibility_landmarks.php"
+      }
+    ]
+  },
+  {
+    "id": "desktop-39",
+    "platform": "Desktop",
+    "number": 39,
+    "description": "The document language is not defined.",
+    "expectedBehavior": "",
+    "fix": "Add a lang attribute to the <HTML> tag.",
+    "priority": "Critical",
+    "wcag": [
+      "3.1.2"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "University of Melbourne - The Language Attribute",
+        "url": "https://www.unimelb.edu.au/accessibility/techniques/language"
+      }
+    ]
+  },
+  {
+    "id": "desktop-40",
+    "platform": "Desktop",
+    "number": 40,
+    "description": "The title of the page does not reflect the purpose of the page.",
+    "expectedBehavior": "Edit the <title> tag to include the page name or other text that describes the page's purpose. Ideal markup would be <title> PAGE PURPOSE | Site Name </title>.",
+    "fix": "Edit the `<title>` tag to include the page name or other text that describes the page's purpose.",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.2"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "Indiana University - Page Titles",
+        "url": "https://accessibility.iu.edu/creating-content/web-content/titles.html"
+      }
+    ]
+  },
+  {
+    "id": "desktop-41",
+    "platform": "Desktop",
+    "number": 41,
+    "description": "The language on the site changes, but is is not translated properly for screen reader users.",
+    "expectedBehavior": "",
+    "fix": "Add a lang attribute to the wrapper of the content where the language changes.",
+    "priority": "Critical",
+    "wcag": [
+      "3.1.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "ISO Language codes",
+        "url": "https://www.sitepoint.com/iso-2-letter-language-codes/"
+      },
+      {
+        "kind": "External",
+        "label": "ISO Language codes",
+        "url": "https://www.sitepoint.com/iso-2-letter-language-codes/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-42",
+    "platform": "Desktop",
+    "number": 42,
+    "description": "This page must be scalable, this allows a user to use their zoom to scale the text/page.",
+    "expectedBehavior": "",
+    "fix": "* Ensure the user-scalable property is not set to \"no\".\n* Ensure the maximum-scale property does not have a value less than 2.\n* Ensure a user can scale up to 200% without loss of content or functionality.",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.4"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "WCAG 1.4.4: Resize Text",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html"
+      },
+      {
+        "kind": "External",
+        "label": "WCAG 1.4.4: Resize Text",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html"
+      }
+    ]
+  },
+  {
+    "id": "desktop-43",
+    "platform": "Desktop",
+    "number": 43,
+    "description": "Table lacks column and/or row headers.",
+    "expectedBehavior": "",
+    "fix": "Mark up each column/row header as a <th> with a scope=\"col\" or scope=\"row\".",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Tables",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3 - Tables Tutorial",
+        "url": "https://www.w3.org/WAI/tutorials/tables/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-44",
+    "platform": "Desktop",
+    "number": 44,
+    "description": "These act similarly to tabs but are not marked up as such.",
+    "expectedBehavior": "Keyboard users should tab to the active tab, then use the arrow keys to navigate to non-active tabs.",
+    "fix": "Mark these up as tabs. WAI Tabs Pattern: https://www.w3.org/WAI/ARIA/apg/patterns/tabpanel/",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Tabs",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Tabs - Manually Activated",
+        "url": "https://codepen.io/nicbade/pen/RwQXBPr"
+      }
+    ]
+  },
+  {
+    "id": "desktop-45",
+    "platform": "Desktop",
+    "number": 45,
+    "description": "This automatic tooltip is not accessible for keyboard and/or screen reader users.",
+    "expectedBehavior": "Ensure the tooltip appears on tab focus and is visible at all times for screen reader users. The tooltip trigger should not be a button or link.",
+    "fix": "Expected behaviors:\n1. Ensure the trigger event is reachable for keyboard users with a tabindex=\"0\". Add screen reader only text to label the trigger.\n2. Ensure the tooltip content is present at all times for screen reader users.\n3. Add a role=\"tooltip\" to the tooltip content wrapper.\n4. Ensure the tooltip appears visually when the trigger element receives focus.",
+    "priority": "",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Tooltips",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Tooltip - Automatic Activation",
+        "url": "https://codepen.io/nicbade/pen/NWyQBxv"
+      }
+    ]
+  },
+  {
+    "id": "desktop-46",
+    "platform": "Desktop",
+    "number": 46,
+    "description": "This manual tooltip is not accessible for keyboard and/or screen reader users.",
+    "expectedBehavior": "Tooltip should appear when keyboard or screen reader users toggle the controlling button. The button should announce its state (collapsed/expanded). When the tooltip is collapsed the tooltip content should be hidden from all users.",
+    "fix": "Expected behaviors: \n1. Mark up the trigger element as a <button> and an add aria-expanded attribute which toggles \"false\" when collapsed and \"true\" expanded.\n2. Add a role=\"tooltip\" to the tooltip content wrapper.\n3. The tooltip should follow the trigger in the DOM to ensure a logical tab order.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Tooltips",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Tooltip - Manual Activation",
+        "url": "https://codepen.io/nicbade/pen/bGLXjpr"
+      }
+    ]
+  },
+  {
+    "id": "desktop-47",
+    "platform": "Desktop",
+    "number": 47,
+    "description": "This video has accessibility issues.",
+    "expectedBehavior": "",
+    "fix": "1. Ensure the video has captions and that they are accurate.\n2. Ensure the video does not play automatically on page load.\n3. There must be a visible play/pause button, ensure it is properly labeled.\n4. A video transcript and/or Audio descriptions must be present.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.2.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3C Making Audio and Video Media Accessible",
+        "url": "https://www.w3.org/WAI/media/av/"
+      }
+    ]
+  },
+  {
+    "id": "desktop-48",
+    "platform": "Desktop",
+    "number": 48,
+    "description": "These elements do not appear in a logical order for keyboard or screen reader users.",
+    "expectedBehavior": "Keyboard focus order should follow the visual order of the page (top/down and left/right).",
+    "fix": "Move the element(s) in the HTML to ensure they follow a logical tab order (top/down and left/right).",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.2",
+      "2.4.3"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-49",
+    "platform": "Desktop",
+    "number": 49,
+    "description": "Users are unable to pause or stop this content, this can render an entire page inaccessible for some users.",
+    "expectedBehavior": "Ensure keyboard and screen reader users are able to pause this content.",
+    "fix": "Add a pause/play button, ensure it is properly labeled.",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.2"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "W3 - Understanding 2.2.2: Pause, Stop, Hide",
+        "url": "https://www.w3.org/WAI/WCAG20/Understanding/pause-stop-hide"
+      }
+    ]
+  },
+  {
+    "id": "desktop-50",
+    "platform": "Desktop",
+    "number": 50,
+    "description": "This element controls expandable content, but the button state not indicated to screen reader users.",
+    "expectedBehavior": "Ensure screen reader users are informed of the state of the button at all times.",
+    "fix": "Add an aria-expanded attribute to the element which controls the expandable content (button or link) and set the value to \"true\" when expanded and \"false\" when collapsed. Additionally, add an aria-controls attribute to the same control and associate it to the \"id\" on the wrapper for the expanded content.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "CodePen: Accordion - Expand/Collapse all",
+        "url": "https://codepen.io/nicbade/pen/vYRBzPR"
+      }
+    ]
+  },
+  {
+    "id": "desktop-51",
+    "platform": "Desktop",
+    "number": 51,
+    "description": "This link visually references the current page.",
+    "expectedBehavior": "Ensure screen reader users are informed this link represents the current page.",
+    "fix": "Add an aria-current attribute to this element.",
+    "priority": "Major",
+    "wcag": [
+      "2.4.4"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "MDN aria-current doc",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current"
+      },
+      {
+        "kind": "External",
+        "label": "MDN - aria-current",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current"
+      }
+    ]
+  },
+  {
+    "id": "desktop-52",
+    "platform": "Desktop",
+    "number": 52,
+    "description": "This process times out too quickly.",
+    "expectedBehavior": "",
+    "fix": "Options:\n* Provide a means for the user to disable the timeout\n* Provide a means for the user to adjust the time limit.\n* Allow the user to extend the timeout.\n* Extend the timeout to 20 hours",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.1"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "WCAG 2.2.1 Criterion: Timing Adjustable",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+      },
+      {
+        "kind": "External",
+        "label": "WCAG 2.2.1 Criterion: Timing Adjustable",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+      }
+    ]
+  },
+  {
+    "id": "desktop-53",
+    "platform": "Desktop",
+    "number": 53,
+    "description": "An invisible element(s) can receive focus and are visible to screen reader users.",
+    "expectedBehavior": "Hide this element from all users or display it for all users.",
+    "fix": "Add a display:none; or visibility:hidden; attribute to the wrapper of the non-visible content.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "desktop-54",
+    "platform": "Desktop",
+    "number": 54,
+    "description": "This content is being hidden from screen reader users due to an aria-hidden attribute.",
+    "expectedBehavior": "Ensure screen reader users are able to access this content.",
+    "fix": "Remove the aria-hidden attribute on the element wrapping this content.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN - aria-hidden",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-hidden"
+      }
+    ]
+  },
+  {
+    "id": "ios-1",
+    "platform": "iOS",
+    "number": 1,
+    "description": "This alert or notification is not announced to VoiceOver users.",
+    "expectedBehavior": "The alert or notification should read out to VoiceOver users.",
+    "fix": "Use a standard iOS alert. Alternatively, cause VoiceOver to automatically read this message when it appears via a UIAccessibility.Notification.announcement.",
+    "priority": "Blocker",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Alert",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      }
+    ]
+  },
+  {
+    "id": "ios-2",
+    "platform": "iOS",
+    "number": 2,
+    "description": "This button or link is not labeled for VoiceOver users",
+    "expectedBehavior": "When VoiceOver users navigate to a button or link, the label should announce.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.4"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "External",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      }
+    ]
+  },
+  {
+    "id": "ios-3",
+    "platform": "iOS",
+    "number": 3,
+    "description": "The state of this control is not conveyed to VoiceOver users",
+    "expectedBehavior": "Ensure the state, (expanded, collapsed etc) is conveyed to VoiceOver users",
+    "fix": "Add a dynamic `accessibilityLabel` which contains the text of the button label, followed by a comma and a space character, followed by \"expanded\" when it is expanded, and \"collapsed\" otherwise.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-4",
+    "platform": "iOS",
+    "number": 4,
+    "description": "This is a button but is not indicated as such for VoiceOver users",
+    "expectedBehavior": "Ensure the element announces as a button and is properly labeled.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.6"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-5",
+    "platform": "iOS",
+    "number": 5,
+    "description": "This button is visually disabled but it is not disabled or indicated as such to VoiceOver users.",
+    "expectedBehavior": "Ensure this element is disabled or actionable for all users.",
+    "fix": "Set the enabled property to false, or give this button an accessibilityTrait of notEnabled.",
+    "priority": "Major",
+    "wcag": [
+      "2.1.1",
+      "4.1.2"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-6",
+    "platform": "iOS",
+    "number": 6,
+    "description": "This picker does not receive VoiceOver focus when it opens.",
+    "expectedBehavior": "Set focus to the first element within the picker or the label.",
+    "fix": "Use the pickerView as the inputView of the UITextField.",
+    "priority": "Blocker",
+    "wcag": [
+      "3.2.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "Not sure if that is the correct documentation",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIPickerViewAccessibilityDelegate",
+        "url": "https://developer.apple.com/documentation/uikit/uipickerviewaccessibilitydelegate"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UIPickerViewAccessibilityDelegate",
+        "url": "https://developer.apple.com/documentation/uikit/uipickerviewaccessibilitydelegate"
+      }
+    ]
+  },
+  {
+    "id": "ios-7",
+    "platform": "iOS",
+    "number": 7,
+    "description": "This color contrast does not meet a minimum of 4.5:1.",
+    "expectedBehavior": "Increase the lumenance between the text and background to pass a 4.5:1 contrast ratio.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.3"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Color Contrast",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast"
+      }
+    ]
+  },
+  {
+    "id": "ios-8",
+    "platform": "iOS",
+    "number": 8,
+    "description": "This element uses color alone to indicate information.",
+    "expectedBehavior": "VoiceOver users should be informed of the purpose of the color change, additionally use another method to convey this information for color blind users.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.1"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-9",
+    "platform": "iOS",
+    "number": 9,
+    "description": "This graphical object does not meet color contrast requirements.",
+    "expectedBehavior": "Ensure the color contrast ratio is a minimum of 3.1:1.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.3"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "External",
+        "label": "MDN Color Contrast",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast"
+      }
+    ]
+  },
+  {
+    "id": "ios-10",
+    "platform": "iOS",
+    "number": 10,
+    "description": "Element is not focusable via swiping with VoiceOver.",
+    "expectedBehavior": "All visible elements and controls should be reachable via VoiceOver",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-11",
+    "platform": "iOS",
+    "number": 11,
+    "description": "This element traps a users focus.",
+    "expectedBehavior": "VoiceOver users should be able to swipe (left/right) away from this element.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.2"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-12",
+    "platform": "iOS",
+    "number": 12,
+    "description": "This form field is not labeled for VoiceOver users.",
+    "expectedBehavior": "When VoiceOver users navigate to a form field, the label should announce.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Swift UI - TextField",
+        "url": "https://developer.apple.com/documentation/swiftui/textfield"
+      },
+      {
+        "kind": "External",
+        "label": "Swift UI - TextField",
+        "url": "https://developer.apple.com/documentation/swiftui/textfield"
+      }
+    ]
+  },
+  {
+    "id": "ios-13",
+    "platform": "iOS",
+    "number": 13,
+    "description": "Errors are not identified to VoiceOver users",
+    "expectedBehavior": "Automatically set focus to the first form field with an error and ensure it is read out to users.",
+    "fix": "UIAccessibility.Notification.announcement",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      }
+    ]
+  },
+  {
+    "id": "ios-14",
+    "platform": "iOS",
+    "number": 14,
+    "description": "Form errors are indicated by color alone.",
+    "expectedBehavior": "Visual text should appear adjacent to the form element and ensure the error text is annoiced to VoiceOver users.",
+    "fix": "Post text with the UIAccessibilityAnnouncementNotification when it appears visually.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-15",
+    "platform": "iOS",
+    "number": 15,
+    "description": "Required form fields are not indicated as such.",
+    "expectedBehavior": "Ensure required are fields are indicated to all users.",
+    "fix": "Add an accessibilityLabel to the form field that contains the name of the form field, followed by a comma, followed by the word \"required\". Ensure that the accessibilityLabel contains all the information conveyed visually, otherwise this information will not be available to VoiceOver users.",
+    "priority": "Major",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-16",
+    "platform": "iOS",
+    "number": 16,
+    "description": "There is text within these images",
+    "expectedBehavior": "Text should be used to convey information.",
+    "fix": "Use live text or move the text outside into separate visible labels.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.5"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-17",
+    "platform": "iOS",
+    "number": 17,
+    "description": "Image label is not announced to VoiceOver users",
+    "expectedBehavior": "Image description should announce to VoiceOver users",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-18",
+    "platform": "iOS",
+    "number": 18,
+    "description": "Image has an inaccurate label.",
+    "expectedBehavior": "Image label description should be accurate to the visual purpose of the image.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-19",
+    "platform": "iOS",
+    "number": 19,
+    "description": "This image is decorative.",
+    "expectedBehavior": "This image should be ignored by VoiceOver.",
+    "fix": "Set the isAccessibilityElement property to false on this element.",
+    "priority": "Minor",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-20",
+    "platform": "iOS",
+    "number": 20,
+    "description": "Modal does not recieve focus when it opens.",
+    "expectedBehavior": "When a user opens a modal, the focus should be placed on the first element inside the modal, typically a heading.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.3"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-21",
+    "platform": "iOS",
+    "number": 21,
+    "description": "VoiceOver focus is lost when the modal is closed",
+    "expectedBehavior": "Focus should be set back to the triggering control of the modal.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.3"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer forums - set focus on previous element when modal closes",
+        "url": "https://developer.apple.com/forums/thread/115594"
+      }
+    ]
+  },
+  {
+    "id": "ios-22",
+    "platform": "iOS",
+    "number": 22,
+    "description": "The modal disappears visually but is still present for VoiceOver users.",
+    "expectedBehavior": "Ensure the modal is hidden for all users.",
+    "fix": "Set accessibilityElementsHidden to true on the view that contains the modal.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer - accessibilityElementsHidden",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615080-accessibilityelementshidden"
+      },
+      {
+        "kind": "External",
+        "label": "Apple Developer - accessibilityElementsHidden",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615080-accessibilityelementshidden"
+      }
+    ]
+  },
+  {
+    "id": "ios-23",
+    "platform": "iOS",
+    "number": 23,
+    "description": "This process times out too quickly for some users.",
+    "expectedBehavior": "",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "WCAG 2.2.1 Criterion: Timing Adjustable",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+      }
+    ]
+  },
+  {
+    "id": "ios-24",
+    "platform": "iOS",
+    "number": 24,
+    "description": "Making a selection within this picker causes the content to change within the view and VoiceOver users are nor informed of this content change.",
+    "expectedBehavior": "Ensure a notification is announced when content changes.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - layoutChanged",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification/1620186-layoutchanged"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - layoutChanged",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification/1620186-layoutchanged"
+      }
+    ]
+  },
+  {
+    "id": "ios-25",
+    "platform": "iOS",
+    "number": 25,
+    "description": "The strike-through typography is not conveyed to VoiceOver users.",
+    "expectedBehavior": "VoiceOver users should be informed of this state, such as \"Original price\".",
+    "fix": "",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "External",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      }
+    ]
+  },
+  {
+    "id": "ios-26",
+    "platform": "iOS",
+    "number": 26,
+    "description": "The tab bar is not correctly indicated.",
+    "expectedBehavior": "Ensure these are announced as tabs and the selected tab is indicated to VoiceOver users.",
+    "fix": "Use a standard UIKit Tab Bar.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Tabs",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UITabBar",
+        "url": "https://developer.apple.com/documentation/uikit/uitabbar"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UITabBar",
+        "url": "https://developer.apple.com/documentation/uikit/uitabbar"
+      }
+    ]
+  },
+  {
+    "id": "ios-27",
+    "platform": "iOS",
+    "number": 27,
+    "description": "This video has either has inaccurate or is lacking captions.",
+    "expectedBehavior": "Ensure the captions are accurate or that the video has captions.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "1.2.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-28",
+    "platform": "iOS",
+    "number": 28,
+    "description": "There is not a means for a user to pause, stop or hide this content.",
+    "expectedBehavior": "Adding a pause/play button ensures cognitive users are able to proceed past this content.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-29",
+    "platform": "iOS",
+    "number": 29,
+    "description": "This video lacks an audio description and/or transcript.",
+    "expectedBehavior": "An audio descriptive version or transcript should be present adjacent to the video.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "1.2.3",
+      "1.2.5"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-30",
+    "platform": "iOS",
+    "number": 30,
+    "description": "This video plays with audio on page load.",
+    "expectedBehavior": "Ensure the video does not play for longer than 3 seconds on page load unless the user toglgles a \"Play\" button",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-31",
+    "platform": "iOS",
+    "number": 31,
+    "description": "This button or link is not correctly labeled for VoiceOver users",
+    "expectedBehavior": "Ensure this button/link is assigned an accessibilityLabel that explains what it does or where it goes.",
+    "fix": "",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "External",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      }
+    ]
+  },
+  {
+    "id": "ios-32",
+    "platform": "iOS",
+    "number": 32,
+    "description": "This is semantically a heading, but it is not indicated as such.",
+    "expectedBehavior": "Ensure that the accessibilityTraits for the heading inclues UIAccessibilityTraitHeader.",
+    "fix": "",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Headings",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIAccessibilityTraitHeader",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibilitytraitheader?language=objc"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UIAccessibilityTraitHeader",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibilitytraitheader?language=objc"
+      }
+    ]
+  },
+  {
+    "id": "ios-33",
+    "platform": "iOS",
+    "number": 33,
+    "description": "This content does not appear in a logical order for VoiceOver users when swiping.",
+    "expectedBehavior": "Content should appear for VoiceOver users in the same order as it is displayed visually.",
+    "fix": "This content should be moved after {another element} in the interface so VoiceOver users encounter elements in an unsurprising and logical order. Alternatively, the ordering of elements in a view can be modified for VoiceOver users by setting the parent view's accessibilityElements property to an array of the child elements in the desired order. However, you should ensure that every child is included in the accessibilityElements array, or it will be unreachable by VoiceOver.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.2"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-34",
+    "platform": "iOS",
+    "number": 34,
+    "description": "There are multiple separate and adjacent controls that perform the same action.",
+    "expectedBehavior": "Consolidate the adjacent and redundant controls into a single control.",
+    "fix": "",
+    "priority": "Minor",
+    "wcag": [
+      "2.4.4"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-35",
+    "platform": "iOS",
+    "number": 35,
+    "description": "This content is only visible to VoiceOver users.",
+    "expectedBehavior": "Ensure this content is visible to everyone, or visible to no one, including VoiceOver users. Hide content that is off screen by setting isAccessibilityElement to false on each view, or by setting accessibilityElementsHidden to true, which will hide all of the elements inside a parent view. We also recommend testing carefully with VoiceOver to ensure the changes have had the desired effect, as it is very easy to inadvertently hide more or less than what was intended.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer - accessibilityElementsHidden",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615080-accessibilityelementshidden"
+      }
+    ]
+  },
+  {
+    "id": "ios-36",
+    "platform": "iOS",
+    "number": 36,
+    "description": "This drop down menu is inaccessible.",
+    "expectedBehavior": "Ensure a VoiceOver user is able to open the menu, make a selection and have their focus return to the control when the selection is made.",
+    "fix": "Use an accessible drop down menu using standard iOS control.",
+    "priority": "Blocker",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-37",
+    "platform": "iOS",
+    "number": 37,
+    "description": "This datepicker is not accessible for VoiceOver users.",
+    "expectedBehavior": "",
+    "fix": "Use a standard UIKit Date Picker.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1",
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "Active",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIDatePicker",
+        "url": "https://developer.apple.com/documentation/uikit/uidatepicker"
+      },
+      {
+        "kind": "External",
+        "label": "UIKit - UIDatePicker",
+        "url": "https://developer.apple.com/documentation/uikit/uidatepicker"
+      }
+    ]
+  },
+  {
+    "id": "ios-38",
+    "platform": "iOS",
+    "number": 38,
+    "description": "When the app language is changed, not all of the accessible content is translated.",
+    "expectedBehavior": "Ensure that all content is translated, including accessibilityLabels, hints, and other visually hidden content.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "3.1.1"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-39",
+    "platform": "iOS",
+    "number": 39,
+    "description": "These date form fields are not labeled properly.",
+    "expectedBehavior": "All fields must have labels. The Month, Day and Year fields should have their own accessibilityLabels. Ensure that each picker is labeled \"month\", \"day\", or \"year\" separately. You might also consider giving more verbose explanations for these fields in their accessibilityHints, such as \"Sets the month of the date.\" or \"Sets the day of the month of the date.\" etc.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-40",
+    "platform": "iOS",
+    "number": 40,
+    "description": "Views must be scalable.",
+    "expectedBehavior": "Ensure that views function correctly and that text is enlarged when large text is turned on. Views should support Dynamic Text font sizing.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.4"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UI Kit - Scaling Fonts Automatically",
+        "url": "https://developer.apple.com/documentation/uikit/uifont/scaling_fonts_automatically"
+      }
+    ]
+  },
+  {
+    "id": "ios-41",
+    "platform": "iOS",
+    "number": 41,
+    "description": "This value slider is inaccessible to VoiceOver users.",
+    "expectedBehavior": "",
+    "fix": "Use a standard UIKit control, or, if using a custom control, make sure to identify the slider as an accessibilityElement and give the slider an accessibilityTrait of \"adjustable\". Make sure the slider has an accessibilityLabel, and optionally an accessibilityHint. In general, you should also override the accessibilityValue to report a value in the context of the slider data (otherwise the value will be reported as a percentage), and provide custom methods accessibilityIncrement and accessibilityDecrement, which handle the VoiceOver user incrementing and decrementing the control.",
+    "priority": "Critical",
+    "wcag": [],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UI Kit - UIControl",
+        "url": "https://developer.apple.com/documentation/uikit/uicontrol"
+      }
+    ]
+  },
+  {
+    "id": "ios-42",
+    "platform": "iOS",
+    "number": 42,
+    "description": "There is no indication that the process has completed.",
+    "expectedBehavior": "Ensure all users are informed when the process is completed.",
+    "fix": "When a visual indicator is shown to inform the user that the process has completed, also post a UIAccessibilityAnnouncementNotification to cause this message to be spoken by VoiceOver.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      }
+    ]
+  },
+  {
+    "id": "ios-43",
+    "platform": "iOS",
+    "number": 43,
+    "description": "It is not clear to VoiceOver users that a new view has been loaded.",
+    "expectedBehavior": "Ensure a user is informed if a new view loads.",
+    "fix": "When the new view loads, fire an UIAccessibilityScreenChangedNotification so that VoiceOver users are informed that a new view has been displayed.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - screenChanged",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification/1620198-screenchanged"
+      }
+    ]
+  },
+  {
+    "id": "ios-44",
+    "platform": "iOS",
+    "number": 44,
+    "description": "It is not indicated to VoiceOver users when this control is selected.",
+    "expectedBehavior": "Ensure all users are informed when the control is selected.",
+    "fix": "Give it an accessibility trait of selected, and clear this trait when it is not selected.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit - UIAccessibilityTraits",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibilitytraits"
+      }
+    ]
+  },
+  {
+    "id": "ios-45",
+    "platform": "iOS",
+    "number": 45,
+    "description": "VoiceOver users are able to read the content behind this modal dialog.",
+    "expectedBehavior": "",
+    "fix": "Set the accessibilityViewIsModal property to \"true\" on the view that contains the modal dialog.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "Apple Developer - accessibilityViewIsModal",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615089-accessibilityviewismodal"
+      }
+    ]
+  },
+  {
+    "id": "ios-46",
+    "platform": "iOS",
+    "number": 46,
+    "description": "This view restricts its display to a single orientation.",
+    "expectedBehavior": "Ensure that all content can be viewed in both portrait and landscape modes.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.3"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-47",
+    "platform": "iOS",
+    "number": 47,
+    "description": "This text field does not present the proper keyboard type to users.",
+    "expectedBehavior": "",
+    "fix": "Ensure that the keyboardType property is set appropriately.",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.5"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UIKit UIKeyboardType",
+        "url": "https://developer.apple.com/documentation/uikit/uikeyboardtype"
+      }
+    ]
+  },
+  {
+    "id": "ios-48",
+    "platform": "iOS",
+    "number": 48,
+    "description": "This content is presented with infinite scrolling; however, infinite scrolling poses significant accessibility issues for VoiceOver users.",
+    "expectedBehavior": "Either paginate this information, or give the user an option to disable infinite scrolling and the ability to load additional content via a \"load more\" button. If the \"load more\" button method is used, ensure that pressing this button sets the user's focus to the first focusable element in the newly loaded content.",
+    "fix": "",
+    "priority": "Minor",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "ios-49",
+    "platform": "iOS",
+    "number": 49,
+    "description": "This switch control is inaccessible to VoiceOver users.",
+    "expectedBehavior": "",
+    "fix": "Use a standard UISwitch class for this element.",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1",
+      "2.5.3"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Internal",
+        "label": "UI Kit - UISwitch",
+        "url": "https://developer.apple.com/documentation/uikit/uiswitch"
+      }
+    ]
+  },
+  {
+    "id": "mobile-1",
+    "platform": "Mobile",
+    "number": 1,
+    "description": "This alert or notification is not announced to VoiceOver/TalkBack users.",
+    "expectedBehavior": "The alert or notification should read out to VoiceOver/TalkBack users.",
+    "fix": "iOS: Use a standard iOS alert. Alternatively, cause VoiceOver to automatically read this message when it appears via a UIAccessibility.Notification.announcement.",
+    "priority": "Blocker",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Alert",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-2",
+    "platform": "Mobile",
+    "number": 2,
+    "description": "This button or link is not labeled for VoiceOver/TalkBack users",
+    "expectedBehavior": "When VoiceOver/TalkBack users navigate to a button or link, the label should announce.",
+    "fix": "Android: Set the text property on the button to a meaningful label, or add a contentDescription.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.4"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-3",
+    "platform": "Mobile",
+    "number": 3,
+    "description": "The state of this control is not conveyed to VoiceOver/TalkBack users",
+    "expectedBehavior": "Ensure the state, (expanded, collapsed etc) is conveyed to VoiceOver users",
+    "fix": "iOS: Add a dynamic accessibilityLabel which contains the text of the button label, followed by a comma and a space character, followed by \"expanded\" when it is expanded, and \"collapsed\" otherwise.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-4",
+    "platform": "Mobile",
+    "number": 4,
+    "description": "This is a button but is not indicated as such for VoiceOver/TalkBack users",
+    "expectedBehavior": "Ensure the element announces as a button and is properly labeled.",
+    "fix": "Android: Use a Button or an ImageButton class for this element. If using an ImageButton element, be sure to also add a contentDescription property with text that labels the button for screen reader users.",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.6"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UI Kit - UIButton",
+        "url": "https://developer.apple.com/documentation/uikit/uibutton/"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - button",
+        "url": "https://developer.android.com/reference/android/widget/Button"
+      }
+    ]
+  },
+  {
+    "id": "mobile-5",
+    "platform": "Mobile",
+    "number": 5,
+    "description": "This button is visually disabled but it is not disabled or indicated as such to VoiceOver users.",
+    "expectedBehavior": "Ensure this element is communicated as disabled and is not actionable for all users.",
+    "fix": "iOS: Set the enabled property to false, or give this button an accessibilityTrait of notEnabled.",
+    "priority": "Major",
+    "wcag": [
+      "2.1.1",
+      "4.1.2"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityTraits",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615202-accessibilitytraits"
+      }
+    ]
+  },
+  {
+    "id": "mobile-6",
+    "platform": "Mobile",
+    "number": 6,
+    "description": "This picker does not receive VoiceOver focus when it opens.",
+    "expectedBehavior": "Set focus to the first element within the picker or the label.",
+    "fix": "iOS: Use the pickerView as the inputView of the UITextField.",
+    "priority": "Blocker",
+    "wcag": [
+      "3.2.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "Not sure if that is the correct documentation",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIPickerViewAccessibilityDelegate",
+        "url": "https://developer.apple.com/documentation/uikit/uipickerviewaccessibilitydelegate"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Pickers",
+        "url": "https://developer.android.com/develop/ui/views/components/pickers"
+      }
+    ]
+  },
+  {
+    "id": "mobile-7",
+    "platform": "Mobile",
+    "number": 7,
+    "description": "This color contrast does not meet a minimum of 4.5:1.",
+    "expectedBehavior": "Increase the lumenance between the text and background to pass a 4.5:1 contrast ratio.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.3"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-8",
+    "platform": "Mobile",
+    "number": 8,
+    "description": "This element uses color alone to indicate information.",
+    "expectedBehavior": "VoiceOver users should be informed of the purpose of the color change, additionally use another method to convey this information for color blind users.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.1"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-9",
+    "platform": "Mobile",
+    "number": 9,
+    "description": "This graphical object does not meet color contrast requirements.",
+    "expectedBehavior": "Ensure the color contrast ratio is a minimum of 3.1:1.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.3"
+    ],
+    "category": "Contrast",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-10",
+    "platform": "Mobile",
+    "number": 10,
+    "description": "Element is not focusable via swiping with VoiceOver/TalkBack.",
+    "expectedBehavior": "All visible elements and controls should be reachable via VoiceOver/TalkBack",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-11",
+    "platform": "Mobile",
+    "number": 11,
+    "description": "This element traps a users focus.",
+    "expectedBehavior": "VoiceOver/TalkBack users should be able to swipe (left/right) away from this element.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.2"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-12",
+    "platform": "Mobile",
+    "number": 12,
+    "description": "This form field is not labeled for VoiceOver/TalkBack users.",
+    "expectedBehavior": "When VoiceOver/TalkBack users navigate to a form field, the label should announce.",
+    "fix": "Android: Add a label for this form field, and associate it with this form field via the labelFor property. Form fields that are EditTexts can have hint text added to them, but this is not sufficient to label the form field, because although Talk Back will announce the hint, it will only do so before any text has been entered. So, once the user enters text, the hint will no longer be available to such users, and the form field will appear to be unlabeled.",
+    "priority": "Blocker",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Swift UI - TextField",
+        "url": "https://developer.apple.com/documentation/swiftui/textfield"
+      },
+      {
+        "kind": "Android",
+        "label": "Material Design - Text fields",
+        "url": "https://m2.material.io/components/text-fields/android"
+      }
+    ]
+  },
+  {
+    "id": "mobile-13",
+    "platform": "Mobile",
+    "number": 13,
+    "description": "Errors are not identified to VoiceOver/TalkBack users",
+    "expectedBehavior": "Automatically set focus to the first form field with an error and ensure it is read out to users.",
+    "fix": "iOS: UIAccessibility.Notification.announcement\n\nAndroid: Ensure all form field errors are properly associated with their designated field, Preferably, set focus to the first editText view with an error. or Less preferably inform TalkBack users of the existence of form errors via a toast notification or some form of alert.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      },
+      {
+        "kind": "Android",
+        "label": "Geeks for Geeks - Implement Form Validation",
+        "url": "https://www.geeksforgeeks.org/implement-form-validation-error-to-edittext-in-android/"
+      }
+    ]
+  },
+  {
+    "id": "mobile-14",
+    "platform": "Mobile",
+    "number": 14,
+    "description": "Form errors are indicated by color alone.",
+    "expectedBehavior": "Visual text should appear adjacent to the form element and ensure the error text is announced to VoiceOver/TalkBack users.",
+    "fix": "iOS: Post text with the UIAccessibilityAnnouncementNotification when it appears visually.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-15",
+    "platform": "Mobile",
+    "number": 15,
+    "description": "Required form fields are not indicated as such.",
+    "expectedBehavior": "Ensure required are fields are indicated to all users.",
+    "fix": "iOS: Add an accessibilityLabel to the form field that contains the name of the form field, followed by a comma, followed by the word \"required\". Ensure that the accessibilityLabel contains all the information conveyed visually, otherwise this information will not be available to VoiceOver users.\n\nAndroid: Add a contentDescription to the form field that contains the name of the form field, followed by a comma, followed by the word \"required\". Ensure that the contentDescription contains all the information conveyed visually, otherwise this information will not be available to Talkback users.",
+    "priority": "Major",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-16",
+    "platform": "Mobile",
+    "number": 16,
+    "description": "There is text within these images",
+    "expectedBehavior": "Text should be used to convey information.",
+    "fix": "iOS: Use live text or move the text outside into separate visible labels.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.4.5"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-17",
+    "platform": "Mobile",
+    "number": 17,
+    "description": "Image label is not announced to VoiceOver users",
+    "expectedBehavior": "Image description should announce to VoiceOver/TalkBack users",
+    "fix": "iOS: Add an accessibilityLabel to this image which conveys the information provided by it.\n\nAndroid: Add a contentDescription property to this image which conveys the information provided by it.",
+    "priority": "Blocker",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-18",
+    "platform": "Mobile",
+    "number": 18,
+    "description": "Image has an inaccurate label.",
+    "expectedBehavior": "Image label description should be accurate to the visual purpose of the image.",
+    "fix": "iOS: Because this image provides meaningful information visually, provide that same information via an accessibilityLabel.\n\nAndroid: Because this image provides meaningful information visually, provide that same information via its contentDescription property.",
+    "priority": "Critical",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-19",
+    "platform": "Mobile",
+    "number": 19,
+    "description": "This image is decorative.",
+    "expectedBehavior": "This image should be ignored by VoiceOver/TalkBack.",
+    "fix": "iOS: Set the isAccessibilityElement property to false on this element.\n\nAndroid: Since this image does not provide meaningful information visually give the imageView an empty contentDescription. Then set the importantForAccessability attribute to \"no\".",
+    "priority": "Minor",
+    "wcag": [
+      "1.1.1"
+    ],
+    "category": "Images",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKIt - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-20",
+    "platform": "Mobile",
+    "number": 20,
+    "description": "Modal does not recieve focus when it opens.",
+    "expectedBehavior": "When a user opens a modal, the focus should be placed on the first element inside the modal, typically a heading.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "2.4.3"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityViewIsModal",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615089-accessibilityviewismodal"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Dialogs",
+        "url": "https://developer.android.com/develop/ui/views/components/dialogs"
+      }
+    ]
+  },
+  {
+    "id": "mobile-21",
+    "platform": "Mobile",
+    "number": 21,
+    "description": "VoiceOver/TalkBack focus is lost when the modal is closed",
+    "expectedBehavior": "Focus should be set back to the triggering control of the modal.",
+    "fix": "Android: Return focus to the invoking control within the parent view when the modal dialog is closed. To focus on any class extending View, use the requestFocus() method.",
+    "priority": "Critical",
+    "wcag": [
+      "2.4.3"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer forums - set focus on previous element when modal closes",
+        "url": "https://developer.apple.com/forums/thread/115594"
+      },
+      {
+        "kind": "Android",
+        "label": "Microsoft - View.RequestFocus Method",
+        "url": "https://developer.android.com/develop/ui/views/components/dialogshttps:/learn.microsoft.com/en-us/dotnet/api/android.views.view.requestfocus?view=xamarin-android-sdk-12"
+      }
+    ]
+  },
+  {
+    "id": "mobile-22",
+    "platform": "Mobile",
+    "number": 22,
+    "description": "The modal disappears visually but is still present for VoiceOver/TalkBack users.",
+    "expectedBehavior": "Ensure the modal is hidden for all users.",
+    "fix": "iOS: Set accessibilityElementsHidden to true on the view that contains the modal.\n\nAndroid: Return focus to the invoking element within the parent view when the modal dialog is closed. To focus on any class extending View, it is possible to use the requestFocus() method which will attempt to give the view focus. If the View's isFocusable() method returns true, then the View will take focus. If not, the View will not receive focus. If isFocusable() returns false then the view will need to have the setFocusable(true) method called on it or in XML the Edit Text can have its android:focusable property set to true. Note that using the setFocusable() method can cause issues with keyboard navigation as described here: https://github.com/googlecodelabs/android-accessibility/issues/4 If you are on Android P or above, consider user the screenReaderFocusable(true) method which should not suffer from the issues described in the link.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityElementsHidden",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615080-accessibilityelementshidden"
+      }
+    ]
+  },
+  {
+    "id": "mobile-23",
+    "platform": "Mobile",
+    "number": 23,
+    "description": "This process times out too quickly for some users.",
+    "expectedBehavior": "Remove the timeout, increase the timeout length to 20 hours (as required by WCAG), or give the user a means to reset the timer.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "WCAG 2.2.1 Criterion: Timing Adjustable",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+      },
+      {
+        "kind": "Android",
+        "label": "WCAG 2.2.1 Criterion: Timing Adjustable",
+        "url": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-24",
+    "platform": "Mobile",
+    "number": 24,
+    "description": "Making a selection within this picker causes the content to change within the view and VoiceOver users are nor informed of this content change.",
+    "expectedBehavior": "Ensure a notification is announced when content changes.",
+    "fix": "iOS: Post a UIAccessibilityLayoutChangedNotification.\n\nAndroid: In Android API 16 and up, the announceForAccessibility() method can be used to let the user know about a contextual change such as a Snackbar being shown (Note that Toasts handle accessibility automatically).",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - layoutChanged",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification/1620186-layoutchanged"
+      },
+      {
+        "kind": "Android",
+        "label": "Microsoft - View.AnnounceFor Accessibility Method",
+        "url": "https://learn.microsoft.com/en-us/dotnet/api/android.views.view.announceforaccessibility?view=xamarin-android-sdk-12"
+      }
+    ]
+  },
+  {
+    "id": "mobile-25",
+    "platform": "Mobile",
+    "number": 25,
+    "description": "The strike-through typography is not conveyed to VoiceOver/TalkBack users.",
+    "expectedBehavior": "VoiceOver/TalkBack users should be informed of this state, such as \"Original price\".",
+    "fix": "iOS: Ensure prices are conveyed within the AccessibilityLabel or they may be accidentally hidden. For example, add \"Original price:\" and \"Current price:\", or similar, just before the elements containing both the struck-through price and current price, respectively.\n\nAndroid: Ensure prices are conveyed within the ContentDescription or they may be accidentally hidden. For example, add \"Original price:\" and \"Current price:\", or similar, just before the elements containing both the struck-through price and current price, respectively.",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-26",
+    "platform": "Mobile",
+    "number": 26,
+    "description": "The tab bar is not correctly indicated.",
+    "expectedBehavior": "Ensure these are announced as tabs and the selected tab is indicated to VoiceOver/TalkBack users.",
+    "fix": "iOS: Use a standard UIKit Tab Bar.\n\nAndroid: Use Android's ActionBar to provide tab navigation.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Tabs",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UITabBar",
+        "url": "https://developer.apple.com/documentation/uikit/uitabbar"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - ActionBar",
+        "url": "https://developer.android.com/reference/android/app/ActionBar"
+      }
+    ]
+  },
+  {
+    "id": "mobile-27",
+    "platform": "Mobile",
+    "number": 27,
+    "description": "This video has either has inaccurate or is lacking captions.",
+    "expectedBehavior": "Ensure the captions are accurate or that the video has captions.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "1.2.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-28",
+    "platform": "Mobile",
+    "number": 28,
+    "description": "There is not a means for a user to pause, stop or hide this content.",
+    "expectedBehavior": "Adding a pause/play button ensures cognitive users are able to proceed past this content.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "2.2.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-29",
+    "platform": "Mobile",
+    "number": 29,
+    "description": "This video lacks an audio description and/or transcript.",
+    "expectedBehavior": "An audio descriptive version or transcript should be present adjacent to the video.",
+    "fix": "",
+    "priority": "Blocker",
+    "wcag": [
+      "1.2.3",
+      "1.2.5"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-30",
+    "platform": "Mobile",
+    "number": 30,
+    "description": "This video plays with audio on page load.",
+    "expectedBehavior": "Ensure the video does not play for longer than 3 seconds on page load unless the user toggles a \"Play\" button",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.2"
+    ],
+    "category": "Videos",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-31",
+    "platform": "Mobile",
+    "number": 31,
+    "description": "This button or link is not correctly labeled for VoiceOver/TalkBack users",
+    "expectedBehavior": "All buttons/links must have meaningful button or link text.",
+    "fix": "iOS: Ensure this button/link is assigned an accessibilityLabel that explains what it does or where it goes.\n\nAndroid: Set the text property on the button to a meaningful label, or add a contentDescription.",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityLabel",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615181-accessibilitylabel"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-32",
+    "platform": "Mobile",
+    "number": 32,
+    "description": "This is semantically a heading, but it is not indicated as such.",
+    "expectedBehavior": "Headings add structure and meaning to pages by labeling each content part and indicating the relative importance of those parts.",
+    "fix": "iOS: Ensure that the accessibilityTraits for the heading includes UIAccessibilityTraitHeader.\n\nAndroid: Set the android:AccessibilityHeading attribute to true on this text.",
+    "priority": "Major",
+    "wcag": [
+      "1.3.1"
+    ],
+    "category": "Headings",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIAccessibilityTraitHeader",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibilitytraitheader?language=objc"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Principles for improving app accessibility",
+        "url": "https://developer.android.com/guide/topics/ui/accessibility/principles"
+      }
+    ]
+  },
+  {
+    "id": "mobile-33",
+    "platform": "Mobile",
+    "number": 33,
+    "description": "This content does not appear in a logical order for VoiceOver/TalkBack users when swiping.",
+    "expectedBehavior": "Swiping should happen in a logical manner. From top/down and left to right similar to a reading order.",
+    "fix": "iOS: This content should be moved after {another element} in the interface so VoiceOver users encounter elements in an unsurprising and logical order. Alternatively, the ordering of elements in a view can be modified for VoiceOver users by setting the parent view's accessibilityElements property to an array of the child elements in the desired order. However, you should ensure that every child is included in the accessibilityElements array, or it will be unreachable by VoiceOver.\n\nAndroid: Reorder the views in the parent view, or Implement the setAccessibilityTraversalAfter and setAccessibilityTraversalBefore methods to tell the screen reader which order to visit the views.",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.2"
+    ],
+    "category": "Focus",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Android",
+        "label": "Accessibility Insights - TraversalOrder",
+        "url": "https://accessibilityinsights.io/info-examples/android/traversal-order/"
+      }
+    ]
+  },
+  {
+    "id": "mobile-34",
+    "platform": "Mobile",
+    "number": 34,
+    "description": "There are multiple separate and adjacent controls that perform the same action.",
+    "expectedBehavior": "Consolidate the adjacent and redundant controls into a single control.",
+    "fix": "",
+    "priority": "Minor",
+    "wcag": [
+      "2.4.4"
+    ],
+    "category": "Buttons/Links",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-35",
+    "platform": "Mobile",
+    "number": 35,
+    "description": "This content is only visible to VoiceOver/TalkBack users.",
+    "expectedBehavior": "Content that is not visibly present should not be read out to screen reader users. If the content is mean to give more context to screen reader users that is acceptable.",
+    "fix": "iOS: Ensure this content is visible to everyone, or visible to no one, including VoiceOver users. Hide content that is off screen by setting isAccessibilityElement to false on each view, or by setting accessibilityElementsHidden to true, which will hide all of the elements inside a parent view. We also recommend testing carefully with VoiceOver to ensure the changes have had the desired effect, as it is very easy to inadvertently hide more or less than what was intended.\n\nAndroid: Either make this content visible to everyone, or hide it for everyone. If the app version is API 16 or higher, the method setImportantForAccessibility(int mode) can be used to prevent accessibility services from finding an element. Use the mode IMPORTANT_FOR_ACCESSIBILITY_NO or IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, depending on the requirements.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityElementsHidden",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615080-accessibilityelementshidden"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Principles for improving app accessibility",
+        "url": "https://developer.android.com/guide/topics/ui/accessibility/principles"
+      }
+    ]
+  },
+  {
+    "id": "mobile-36",
+    "platform": "Mobile",
+    "number": 36,
+    "description": "This drop down menu is inaccessible.",
+    "expectedBehavior": "Ensure a VoiceOver/TalkBack user is able to open the menu, make a selection and have their focus return to the control when the selection is made.",
+    "fix": "iOS: Use an accessible drop down menu using standard iOS control.\n\nAndroid: Consider using Android's Spinner class to generate the menu.",
+    "priority": "Blocker",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "Android",
+        "label": "Android Developers - Spinners",
+        "url": "https://developer.android.com/develop/ui/views/components/spinner"
+      }
+    ]
+  },
+  {
+    "id": "mobile-37",
+    "platform": "Mobile",
+    "number": 37,
+    "description": "This datepicker is not accessible for VoiceOver/TalkBack users.",
+    "expectedBehavior": "",
+    "fix": "iOS: Use a standard UIKit Date Picker.\n\nAndroid: Use Android's DatePicker class.",
+    "priority": "Blocker",
+    "wcag": [
+      "2.1.1",
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "Active",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIDatePicker",
+        "url": "https://developer.apple.com/documentation/uikit/uidatepicker"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - DatePicker",
+        "url": "https://developer.android.com/reference/android/widget/DatePicker"
+      }
+    ]
+  },
+  {
+    "id": "mobile-38",
+    "platform": "Mobile",
+    "number": 38,
+    "description": "When the app language is changed, not all of the accessible content is translated.",
+    "expectedBehavior": "Ensure that all content is translated, including accessibility labels, hints, and other visually hidden content.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "3.1.1"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-39",
+    "platform": "Mobile",
+    "number": 39,
+    "description": "These date form fields are not labeled properly.",
+    "expectedBehavior": "All fields must have labels. The Month, Day and Year fields should have their own accessibilityLabels. Ensure that each picker is labeled \"month\", \"day\", or \"year\" separately. You might also consider giving more verbose explanations for these fields in their accessibilityHints, such as \"Sets the month of the date.\" or \"Sets the day of the month of the date.\" etc.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-40",
+    "platform": "Mobile",
+    "number": 40,
+    "description": "Views must be scalable.",
+    "expectedBehavior": "Ensure that views function correctly and that text is enlarged when large text is turned on.",
+    "fix": "iOS: Views should support Dynamic Text font sizing.",
+    "priority": "Critical",
+    "wcag": [
+      "1.4.4"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UI Kit - Scaling Fonts Automatically",
+        "url": "https://developer.apple.com/documentation/uikit/uifont/scaling_fonts_automatically"
+      }
+    ]
+  },
+  {
+    "id": "mobile-41",
+    "platform": "Mobile",
+    "number": 41,
+    "description": "This value slider is inaccessible to VoiceOver/TalkBack users.",
+    "expectedBehavior": "",
+    "fix": "iOS: Use a standard UIKit control, or, if using a custom control, make sure to identify the slider as an accessibilityElement and give the slider an accessibilityTrait of \"adjustable\". Make sure the slider has an accessibilityLabel, and optionally an accessibilityHint. In general, you should also override the accessibilityValue to report a value in the context of the slider data (otherwise the value will be reported as a percentage), and provide custom methods accessibilityIncrement and accessibilityDecrement, which handle the VoiceOver user incrementing and decrementing the control.\n\nAndroid: Use a SeekBar component.",
+    "priority": "Critical",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UI Kit - UIControl",
+        "url": "https://developer.apple.com/documentation/uikit/uicontrol"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - SeekBar",
+        "url": "https://developer.android.com/reference/android/widget/SeekBar"
+      }
+    ]
+  },
+  {
+    "id": "mobile-42",
+    "platform": "Mobile",
+    "number": 42,
+    "description": "There is no indication that the process has completed.",
+    "expectedBehavior": "Ensure all users are informed when the process is completed.",
+    "fix": "iOS: When a visual indicator is shown to inform the user that the process has completed, also post a UIAccessibilityAnnouncementNotification to cause this message to be spoken by VoiceOver.\n\nAndroid: Ensure there is a visual indication to show that the process has completed. This information will also need to be conveyed via textual means for the benefit of screen reader users. In Android API 16 and up, the announceForAccessibility() method can be used to let the user know about a contextual change such as a Snackbar being shown.",
+    "priority": "Critical",
+    "wcag": [
+      "3.3.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIAccessibility.Notification",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification"
+      },
+      {
+        "kind": "Android",
+        "label": "Microsoft - View.AnnounceFor Accessibility Method",
+        "url": "https://learn.microsoft.com/en-us/dotnet/api/android.views.view.announceforaccessibility?view=xamarin-android-sdk-12"
+      }
+    ]
+  },
+  {
+    "id": "mobile-43",
+    "platform": "Mobile",
+    "number": 43,
+    "description": "It is not clear to VoiceOver/TalkBack users that a new view has been loaded.",
+    "expectedBehavior": "Ensure a user is informed if a new view loads.",
+    "fix": "iOS: When the new view loads, fire an UIAccessibilityScreenChangedNotification so that VoiceOver users are informed that a new view has been displayed.\n\nAndroid: When the new view loads, create a View.announceForAccessibility(text) event so that TalkBack users are informed that a new view has been displayed.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - screenChanged",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibility/notification/1620198-screenchanged"
+      },
+      {
+        "kind": "Android",
+        "label": "Microsoft - View.AnnounceFor Accessibility Method",
+        "url": "https://learn.microsoft.com/en-us/dotnet/api/android.views.view.announceforaccessibility?view=xamarin-android-sdk-12"
+      }
+    ]
+  },
+  {
+    "id": "mobile-44",
+    "platform": "Mobile",
+    "number": 44,
+    "description": "It is not indicated to VoiceOver/TalkBack users when this control is selected.",
+    "expectedBehavior": "Ensure all users are informed when the control is selected.",
+    "fix": "iOS: Give it an accessibility trait of selected, and clear this trait when it is not selected.\n\nAndroid: Ensure that this element uses other means to convey its status to users including shape, outlining, etc. This element will also need its status conveyed to screen reader users. For example, Prepend the word \"selected\" to the contentDescription property when it is selected.",
+    "priority": "Critical",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Screen Reader",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit - UIAccessibilityTraits",
+        "url": "https://developer.apple.com/documentation/uikit/uiaccessibilitytraits"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - contentDescription",
+        "url": "https://developer.android.com/reference/android/view/View.html"
+      }
+    ]
+  },
+  {
+    "id": "mobile-45",
+    "platform": "Mobile",
+    "number": 45,
+    "description": "VoiceOver users are able to read the content behind this modal dialog.",
+    "expectedBehavior": "",
+    "fix": "iOS: Set the accessibilityViewIsModal property to \"true\" on the view that contains the modal dialog.\n\nAndroid: Build the modal using structures such as AlertDialog object, on the view that contains the modal dialog.",
+    "priority": "Major",
+    "wcag": [
+      "4.1.2"
+    ],
+    "category": "Modal",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "Apple Developer - accessibilityViewIsModal",
+        "url": "https://developer.apple.com/documentation/objectivec/nsobject/1615089-accessibilityviewismodal"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Dialogs",
+        "url": "https://developer.android.com/develop/ui/views/components/dialogs"
+      }
+    ]
+  },
+  {
+    "id": "mobile-46",
+    "platform": "Mobile",
+    "number": 46,
+    "description": "This view restricts its display to a single orientation.",
+    "expectedBehavior": "Ensure that all content can be viewed in both portrait and landscape modes.",
+    "fix": "",
+    "priority": "Critical",
+    "wcag": [
+      "1.3.3"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-47",
+    "platform": "Mobile",
+    "number": 47,
+    "description": "This text field does not present the proper keyboard type to users.",
+    "expectedBehavior": "",
+    "fix": "iOS: Ensure that the keyboardType property is set appropriately.\n\nAndroid: Ensure that the inputType property is set appropriately.",
+    "priority": "Minor",
+    "wcag": [
+      "1.3.5"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UIKit UIKeyboardType",
+        "url": "https://developer.apple.com/documentation/uikit/uikeyboardtype"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - InputType",
+        "url": "https://developer.android.com/reference/android/text/InputType"
+      }
+    ]
+  },
+  {
+    "id": "mobile-48",
+    "platform": "Mobile",
+    "number": 48,
+    "description": "This content is presented with infinite scrolling; however, infinite scrolling poses significant accessibility issues for VoiceOver/TalkBack users.",
+    "expectedBehavior": "Either paginate this information, or give the user an option to disable infinite scrolling and the ability to load additional content via a \"load more\" button. If the \"load more\" button method is used, ensure that pressing this button sets the user's focus to the first focusable element in the newly loaded content.",
+    "fix": "",
+    "priority": "Minor",
+    "wcag": [
+      "2.1.1"
+    ],
+    "category": "Page",
+    "comments": "",
+    "examples": []
+  },
+  {
+    "id": "mobile-49",
+    "platform": "Mobile",
+    "number": 49,
+    "description": "This switch control is inaccessible to VoiceOver users.",
+    "expectedBehavior": "",
+    "fix": "iOS: Use a standard UISwitch class for this element.",
+    "priority": "",
+    "wcag": [
+      "2.1.1",
+      "2.5.3"
+    ],
+    "category": "Forms",
+    "comments": "",
+    "examples": [
+      {
+        "kind": "iOS",
+        "label": "UI Kit - UISwitch",
+        "url": "https://developer.apple.com/documentation/uikit/uiswitch"
+      },
+      {
+        "kind": "Android",
+        "label": "Android Developers - Switch",
+        "url": "https://developer.android.com/reference/android/widget/Switch"
+      }
+    ]
+  }
+]
