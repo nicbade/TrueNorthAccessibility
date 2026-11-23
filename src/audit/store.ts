@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { deleteScreenshot } from './screenshots'
+import { deleteIssueImages, deleteScreenshot } from './screenshots'
 import type { AuditData, AuditPage, Issue, IssueDraft, Project } from './types'
 
 const STORAGE_KEY = 'truenorth-audit-hub:v1'
@@ -15,7 +15,7 @@ function load(): AuditData {
       version: 1,
       projects: parsed.projects ?? [],
       pages: parsed.pages ?? [],
-      issues: parsed.issues ?? [],
+      issues: (parsed.issues ?? []).map((i) => ({ ...i, images: i.images ?? [] })),
     }
   } catch {
     return EMPTY
@@ -56,6 +56,11 @@ export function useAuditData(): AuditData {
   return useSyncExternalStore(subscribe, () => state)
 }
 
+function dropImagesOf(issues: Issue[]) {
+  const ids = issues.flatMap((i) => i.images.map((img) => img.id))
+  void deleteIssueImages(ids).catch(() => undefined)
+}
+
 const now = () => new Date().toISOString()
 const uid = () => crypto.randomUUID()
 
@@ -77,6 +82,7 @@ export function updateProject(id: string, input: ProjectInput) {
 
 export function deleteProject(id: string) {
   const pageIds = state.pages.filter((p) => p.projectId === id).map((p) => p.id)
+  const removed = state.issues.filter((i) => i.projectId === id)
   commit({
     ...state,
     projects: state.projects.filter((p) => p.id !== id),
@@ -84,6 +90,7 @@ export function deleteProject(id: string) {
     issues: state.issues.filter((i) => i.projectId !== id),
   })
   pageIds.forEach((pid) => void deleteScreenshot(pid).catch(() => undefined))
+  dropImagesOf(removed)
 }
 
 export function createPage(projectId: string, input: PageInput): AuditPage {
@@ -107,12 +114,14 @@ export function updatePage(id: string, input: Partial<Omit<AuditPage, 'id' | 'pr
 }
 
 export function deletePage(id: string) {
+  const removed = state.issues.filter((i) => i.pageId === id)
   commit({
     ...state,
     pages: state.pages.filter((p) => p.id !== id),
     issues: state.issues.filter((i) => i.pageId !== id),
   })
   void deleteScreenshot(id).catch(() => undefined)
+  dropImagesOf(removed)
 }
 
 export function saveIssue(page: AuditPage, draft: IssueDraft, existingId?: string): Issue {
@@ -151,5 +160,7 @@ export function updateIssueStatus(id: string, status: Issue['status']) {
 }
 
 export function deleteIssue(id: string) {
+  const removed = state.issues.filter((i) => i.id === id)
   commit({ ...state, issues: state.issues.filter((i) => i.id !== id) })
+  dropImagesOf(removed)
 }

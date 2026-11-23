@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from 'react'
 import { PRIORITIES } from '../data/commonIssues'
 import { getWcag } from '../data/wcag'
 import IssueForm from './IssueForm'
+import IssueImageGallery from './IssueImageGallery'
 import PageForm from './PageForm'
 import { hrefFor, navigate } from './router'
 import ScreenshotPanel from './ScreenshotPanel'
@@ -46,7 +47,13 @@ export default function PageView({ project, page }: Props) {
   }
 
   const removeIssue = (issue: Issue) => {
-    if (!window.confirm(`Delete issue #${issue.number}?`)) return
+    const shots = issue.images.length
+    if (
+      !window.confirm(
+        `Delete issue #${issue.number}${shots ? ` and its ${shots} screenshot${shots === 1 ? '' : 's'}` : ''}?`,
+      )
+    )
+      return
     deleteIssue(issue.id)
     setAnnouncement(`Issue #${issue.number} deleted.`)
     document.getElementById(`${id}-add`)?.focus()
@@ -196,6 +203,7 @@ export default function PageView({ project, page }: Props) {
                           {issue.wcag.map((w) => (getWcag(w) ? `${w} ${getWcag(w)!.name}` : w)).join('; ')}
                         </p>
                       )}
+                      <IssueImageGallery issue={issue} />
                       {(issue.expectedBehavior || issue.fix) && (
                         <details className="mt-2 text-[0.8125rem]">
                           <summary className="cursor-pointer font-semibold text-forest">

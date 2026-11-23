@@ -2,7 +2,9 @@ import type { Workbook, Worksheet } from 'exceljs'
 import type { ExampleKind } from '../data/commonIssues'
 import { getWcag } from '../data/wcag'
 import { computeMetrics, UNSET } from './metrics'
-import type { AuditPage, Issue, Project } from './types'
+import { imageAlt } from './issueImages'
+import { getIssueImage } from './screenshots'
+import type { AuditPage, Issue, IssueImage, Project } from './types'
 
 const ACCENT = 'FF2A5C1E'
 const HEADER_FONT = { bold: true, color: { argb: 'FFFFFFFF' } }
@@ -14,6 +16,46 @@ const THIN_BORDER = {
   left: { style: 'thin' as const, color: BORDER_COLOR },
   bottom: { style: 'thin' as const, color: BORDER_COLOR },
   right: { style: 'thin' as const, color: BORDER_COLOR },
+}
+
+// Thumbnails are rendered at 2x for sharpness and displayed at THUMB_MAX css px.
+const THUMB_MAX = { width: 240, height: 180 }
+const SCREENSHOT_COL_WIDTH = 36
+const PX_TO_POINTS = 0.75
+
+type EmbeddedImage = { imageId: number; width: number; height: number }
+
+async function renderThumbnail(blob: Blob): Promise<{ buffer: ArrayBuffer; width: number; height: number }> {
+  const bitmap = await createImageBitmap(blob)
+  const scale = Math.min(1, THUMB_MAX.width / bitmap.width, THUMB_MAX.height / bitmap.height)
+  const width = Math.max(1, Math.round(bitmap.width * scale))
+  const height = Math.max(1, Math.round(bitmap.height * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = width * 2
+  canvas.height = height * 2
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  bitmap.close()
+  const png = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Thumbnail failed'))), 'image/png'),
+  )
+  return { buffer: await png.arrayBuffer(), width, height }
+}
+
+async function embedIssueImages(wb: Workbook, issues: Issue[]): Promise<Map<string, EmbeddedImage>> {
+  const embedded = new Map<string, EmbeddedImage>()
+  for (const img of issues.flatMap((i) => i.images)) {
+    try {
+      const blob = await getIssueImage(img.id)
+      if (!blob) continue
+      const thumb = await renderThumbnail(blob)
+      // exceljs's typings expect a Node Buffer; an ArrayBuffer works in the browser build.
+      const imageId = wb.addImage({ buffer: thumb.buffer as never, extension: 'png' })
+      embedded.set(img.id, { imageId, width: thumb.width, height: thumb.height })
+    } catch {
+      // Unreadable images are listed by name in the sheet instead.
+    }
+  }
+  return embedded
 }
 
 type Column = {
@@ -88,6 +130,12 @@ function issueColumns(issues: Issue[], includePage: boolean): Column[] {
     },
     { header: 'Category', width: 16, value: (i) => i.category },
     { header: 'Comments', width: 40, wrap: true, value: (i) => i.comments },
+    {
+      header: 'Screenshot Alt Text',
+      width: 40,
+      wrap: true,
+      value: (i) => i.images.map((img, n) => `${n + 1}. ${imageAlt(img, n)}`).join('\n'),
+    },
     { header: 'Common Issue Ref', width: 16, value: (i) => i.commonIssueId ?? '' },
     { header: 'Created', width: 18, value: (i) => formatDate(i.createdAt) },
     { header: 'Updated', width: 18, value: (i) => formatDate(i.updatedAt) },
@@ -116,9 +164,21 @@ function addIssueSheet(
   issues: Issue[],
   pagesById: Map<string, AuditPage>,
   includePage: boolean,
+  embedded: Map<string, EmbeddedImage>,
 ) {
   const sheet = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }] })
-  const cols = issueColumns(issues, includePage)
+  const shotCount = Math.max(0, ...issues.map((i) => i.images.length))
+  const shotCols: Column[] = Array.from({ length: shotCount }, (_, n) => ({
+    header: `Screenshot ${n + 1}`,
+    width: SCREENSHOT_COL_WIDTH,
+    wrap: true,
+    value: (i: Issue) => {
+      const img: IssueImage | undefined = i.images[n]
+      return img && !embedded.has(img.id) ? `${img.name} (image unavailable)` : ''
+    },
+  }))
+  const cols = [...issueColumns(issues, includePage), ...shotCols]
+  const firstShotCol = cols.length - shotCount + 1
   sheet.columns = cols.map((c) => ({ header: c.header, width: c.width }))
   styleHeaderRow(sheet, 1, cols.length)
 
@@ -134,6 +194,17 @@ function addIssueSheet(
         cell.value = { text: String(cell.value ?? ''), hyperlink: href }
         cell.font = { color: { argb: 'FF1A4FA0' }, underline: true }
       }
+    })
+    const placed = issue.images.map((img) => embedded.get(img.id))
+    const tallest = Math.max(0, ...placed.map((e) => e?.height ?? 0))
+    if (tallest) row.height = (tallest + 12) * PX_TO_POINTS
+    placed.forEach((e, n) => {
+      if (!e) return
+      sheet.addImage(e.imageId, {
+        tl: { col: firstShotCol - 1 + n, row: row.number - 1 },
+        ext: { width: e.width, height: e.height },
+        editAs: 'oneCell',
+      })
     })
   })
 
@@ -226,6 +297,7 @@ function addSummarySheet(wb: Workbook, project: Project, pages: AuditPage[], iss
     ['Metric', 'Value'],
     [
       ['Pages audited', pages.length],
+      ['Issue screenshots', issues.reduce((n, i) => n + i.images.length, 0)],
       ['Total issues', m.total],
       ['Open issues', m.open],
       ['Resolved issues', m.resolved],
@@ -320,8 +392,10 @@ export async function buildProjectWorkbook(
   )
   const pagesById = new Map(pages.map((p) => [p.id, p]))
 
+  const embedded = await embedIssueImages(wb, sorted)
+
   addSummarySheet(wb, project, pages, sorted)
-  addIssueSheet(wb, 'All Issues', sorted, pagesById, true)
+  addIssueSheet(wb, 'All Issues', sorted, pagesById, true, embedded)
   const used = new Set(['summary', 'all issues'])
   pages.forEach((page) => {
     addIssueSheet(
@@ -330,6 +404,7 @@ export async function buildProjectWorkbook(
       sorted.filter((i) => i.pageId === page.id),
       pagesById,
       false,
+      embedded,
     )
   })
 

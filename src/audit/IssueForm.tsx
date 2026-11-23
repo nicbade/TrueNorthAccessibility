@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type ClipboardEvent, type FormEvent } from 'react'
 import {
   CATEGORIES,
   COMMON_ISSUES,
@@ -11,6 +11,9 @@ import {
 } from '../data/commonIssues'
 import { getWcag, parseWcagList } from '../data/wcag'
 import CommonIssueSearch from './CommonIssueSearch'
+import IssueImagesField, { addFiles } from './IssueImagesField'
+import { imageFilesFrom } from './issueImages'
+import { deleteIssueImages, putIssueImages } from './screenshots'
 import { STATUSES, type Issue, type IssueDraft, type IssueStatus } from './types'
 import Dialog from './ui/Dialog'
 import { button, hint, input, label } from './ui/styles'
@@ -37,6 +40,7 @@ const EMPTY: FormState = {
   status: 'Open',
   location: '',
   commonIssueId: null,
+  images: [],
 }
 
 function fromIssue(issue: Issue): FormState {
@@ -50,7 +54,9 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
   const [values, setValues] = useState<FormState>(() => (issue ? fromIssue(issue) : EMPTY))
   const [error, setError] = useState('')
   const [announcement, setAnnouncement] = useState('')
+  const [saving, setSaving] = useState(false)
   const descRef = useRef<HTMLTextAreaElement>(null)
+  const pending = useRef(new Map<string, Blob>()).current
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setValues((v) => ({ ...v, [key]: value }))
@@ -77,7 +83,20 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
   const wcagIds = parseWcagList(values.wcagText)
   const source = values.commonIssueId ? COMMON_ISSUES.find((c) => c.id === values.commonIssueId) : undefined
 
-  const submit = (e: FormEvent) => {
+  const onPaste = async (e: ClipboardEvent) => {
+    const files = imageFilesFrom(e.clipboardData.items)
+    if (!files.length) return
+    e.preventDefault()
+    const result = await addFiles(files, values.images, pending)
+    set('images', result.images)
+    setAnnouncement(
+      `${result.added.length} pasted screenshot${result.added.length === 1 ? '' : 's'} added. Add alt text describing ${
+        result.added.length === 1 ? 'it' : 'each one'
+      }.`,
+    )
+  }
+
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!values.description.trim()) {
       setError('Enter a description of the issue.')
@@ -85,12 +104,28 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
       return
     }
     const { wcagText, ...rest } = values
+    const keep = new Set(values.images.map((img) => img.id))
+    setSaving(true)
+    try {
+      await putIssueImages(
+        [...pending].filter(([imgId]) => keep.has(imgId)).map(([imgId, blob]) => ({ id: imgId, blob })),
+      )
+    } catch {
+      setSaving(false)
+      setAnnouncement('')
+      setError('Could not save the screenshots in this browser. Storage may be full or disabled.')
+      descRef.current?.focus()
+      return
+    }
     onSubmit({
       ...rest,
       description: values.description.trim(),
       wcag: parseWcagList(wcagText),
       examples: values.examples.filter((x) => x.label.trim() || x.url.trim()),
+      images: values.images.map((img) => ({ ...img, alt: img.alt.trim() })),
     })
+    const dropped = (issue?.images ?? []).filter((img) => !keep.has(img.id)).map((img) => img.id)
+    void deleteIssueImages(dropped).catch(() => undefined)
   }
 
   const updateExample = (index: number, patch: Partial<FormState['examples'][number]>) =>
@@ -105,13 +140,14 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
       title={issue ? `Edit issue #${issue.number}` : 'Add issue'}
       description={`Page: ${pageName}`}
       onClose={onClose}
+      onPaste={(e) => void onPaste(e)}
       footer={
         <>
           <button type="button" className={button('secondary')} onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" form={formId} className={button('primary')}>
-            {issue ? 'Save issue' : 'Add issue'}
+          <button type="submit" form={formId} className={button('primary')} disabled={saving}>
+            {saving ? 'Saving…' : issue ? 'Save issue' : 'Add issue'}
           </button>
         </>
       }
@@ -121,7 +157,12 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
         {announcement}
       </div>
 
-      <form id={formId} onSubmit={submit} noValidate className="mt-5 grid gap-4 sm:grid-cols-2">
+      <form
+        id={formId}
+        onSubmit={(e) => void submit(e)}
+        noValidate
+        className="mt-5 grid gap-4 sm:grid-cols-2"
+      >
         {source && (
           <p className="m-0 flex flex-wrap items-center gap-2 rounded-md bg-surface px-3 py-2 text-[0.75rem] text-ink sm:col-span-2">
             <span>
@@ -289,6 +330,13 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
             onChange={(e) => set('location', e.target.value)}
           />
         </div>
+
+        <IssueImagesField
+          images={values.images}
+          pending={pending}
+          onChange={(images) => set('images', images)}
+          onAnnounce={setAnnouncement}
+        />
 
         <fieldset className="m-0 min-w-0 rounded-lg border border-divider p-4 sm:col-span-2">
           <legend className="px-1 text-[0.8125rem] font-semibold text-ink">
