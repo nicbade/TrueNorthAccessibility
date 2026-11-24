@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { imageAlt, useIssueImageUrl } from './issueImages'
+import { imageAlt, useImageUrl } from './issueImages'
 import type { Issue, IssueImage } from './types'
 import Dialog from './ui/Dialog'
 import { button } from './ui/styles'
 
 function ThumbButton({ image, index, onOpen }: { image: IssueImage; index: number; onOpen: () => void }) {
-  const url = useIssueImageUrl(image.id)
+  const url = useImageUrl(image.path)
   return (
     <button
       type="button"
@@ -34,7 +34,7 @@ function Viewer({
   onClose: () => void
 }) {
   const image = issue.images[index]
-  const url = useIssueImageUrl(image.id)
+  const url = useImageUrl(image.path)
   const [fit, setFit] = useState(true)
   const count = issue.images.length
   return (

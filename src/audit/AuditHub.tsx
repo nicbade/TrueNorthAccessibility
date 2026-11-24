@@ -5,8 +5,11 @@ import PageView from './PageView'
 import ProjectsView from './ProjectsView'
 import ProjectView from './ProjectView'
 import { HUB_PATH, hrefFor, parseRoute, useHash } from './router'
-import { useAuditData } from './store'
-import { link } from './ui/styles'
+import { signOut, useAuth } from './auth'
+import LoginScreen from './LoginScreen'
+import { loadHubData, resetHubData, useAuditData } from './store'
+import { supabaseConfigured } from './supabase'
+import { button, link } from './ui/styles'
 
 type Props = { theme: Theme; onToggleTheme: () => void }
 
@@ -23,6 +26,10 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const hash = useHash()
   const route = parseRoute(hash)
   const data = useAuditData()
+  const auth = useAuth()
+  const userId = auth.session?.user.id ?? null
+  const email = auth.session?.user.email ?? ''
+  const ready = auth.status === 'signed-in' && data.status === 'ready'
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
 
@@ -31,9 +38,20 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     route.view === 'page'
       ? data.pages.find((p) => p.id === route.pageId && p.projectId === route.projectId)
       : undefined
-  const missing = (route.view !== 'projects' && !project) || (route.view === 'page' && !page)
+  const missing = ready && ((route.view !== 'projects' && !project) || (route.view === 'page' && !page))
 
-  const title = missing ? 'Not found' : (page?.name ?? project?.name ?? 'Audit projects')
+  const title = !supabaseConfigured
+    ? 'Not configured'
+    : auth.status === 'signed-out'
+      ? 'Sign in'
+      : missing
+        ? 'Not found'
+        : (page?.name ?? project?.name ?? 'Audit projects')
+
+  useEffect(() => {
+    if (userId) void loadHubData(userId)
+    else resetHubData()
+  }, [userId])
 
   useEffect(() => {
     document.title = `${title} | Audit Hub | True North Accessibility`
@@ -90,9 +108,29 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
               Back to site
             </a>
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+            {auth.status === 'signed-in' && (
+              <div className="flex flex-wrap items-center gap-3 border-l border-divider pl-4">
+                <p className="m-0 text-[0.8125rem] text-slate">
+                  <span className="sr-only">Signed in as </span>
+                  <span className="break-all text-ink">{email}</span>
+                  {data.status === 'ready' && !data.isOwner && (
+                    <span className="ml-2 rounded-full bg-surface px-2 py-0.5 text-[0.6875rem] font-semibold text-ink ring-1 ring-slate ring-inset">
+                      View only
+                    </span>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className={button('secondary', 'px-3 py-1.5')}
+                  onClick={() => void signOut()}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </div>
-        {crumbs.length > 1 && (
+        {ready && crumbs.length > 1 && (
           <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-6 pb-2">
             <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0 text-[0.8125rem]">
               {crumbs.map((c, i) => {
@@ -122,7 +160,41 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
       </header>
 
       <main id="hub-main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-7xl px-6 py-8 outline-none">
-        {missing ? (
+        {!supabaseConfigured ? (
+          <div className="mx-auto max-w-xl">
+            <h1 tabIndex={-1} className="m-0 font-serif text-3xl">
+              Audit Hub is not configured
+            </h1>
+            <p className="mt-2">
+              This build has no Supabase connection. Set <code>VITE_SUPABASE_URL</code> and{' '}
+              <code>VITE_SUPABASE_ANON_KEY</code> and rebuild.
+            </p>
+          </div>
+        ) : auth.status === 'loading' ? (
+          <p role="status" className="m-0">
+            Checking sign-in…
+          </p>
+        ) : auth.status === 'signed-out' ? (
+          <LoginScreen />
+        ) : data.status === 'error' ? (
+          <div role="alert">
+            <h1 tabIndex={-1} className="m-0 font-serif text-3xl">
+              Could not load audit data
+            </h1>
+            <p className="mt-2">{data.error}</p>
+            <button
+              type="button"
+              className={button('primary')}
+              onClick={() => userId && void loadHubData(userId)}
+            >
+              Try again
+            </button>
+          </div>
+        ) : !ready ? (
+          <p role="status" className="m-0">
+            Loading audit data…
+          </p>
+        ) : missing ? (
           <div>
             <h1 tabIndex={-1} className="m-0 font-serif text-3xl">
               Not found

@@ -7,7 +7,7 @@ import { button, hint, input, label } from './ui/styles'
 
 type Props = {
   project?: Project
-  onSubmit: (input: ProjectInput) => void
+  onSubmit: (input: ProjectInput) => Promise<void>
   onClose: () => void
 }
 
@@ -25,20 +25,29 @@ const DEFAULTS: ProjectInput = {
 export default function ProjectForm({ project, onSubmit, onClose }: Props) {
   const [values, setValues] = useState<ProjectInput>(() => (project ? { ...project } : DEFAULTS))
   const [error, setError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
   const id = useId()
   const formId = `${id}-form`
 
   const set = <K extends keyof ProjectInput>(key: K, value: ProjectInput[K]) =>
     setValues((v) => ({ ...v, [key]: value }))
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!values.name.trim()) {
       setError('Enter a project name.')
       document.getElementById(`${id}-name`)?.focus()
       return
     }
-    onSubmit({ ...values, name: values.name.trim() })
+    setSaving(true)
+    setSaveError('')
+    try {
+      await onSubmit({ ...values, name: values.name.trim() })
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -50,13 +59,21 @@ export default function ProjectForm({ project, onSubmit, onClose }: Props) {
           <button type="button" className={button('secondary')} onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" form={formId} className={button('primary')}>
-            {project ? 'Save changes' : 'Create project'}
+          <button type="submit" form={formId} className={button('primary')} disabled={saving}>
+            {saving ? 'Saving…' : project ? 'Save changes' : 'Create project'}
           </button>
         </>
       }
     >
-      <form id={formId} onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+      <form id={formId} onSubmit={(e) => void submit(e)} noValidate className="grid gap-4 sm:grid-cols-2">
+        {saveError && (
+          <p
+            role="alert"
+            className="m-0 rounded border border-danger-border bg-danger-bg px-3 py-2 text-[0.8125rem] font-semibold text-danger-text sm:col-span-2"
+          >
+            {saveError}
+          </p>
+        )}
         <div className="sm:col-span-2">
           <label htmlFor={`${id}-name`} className={label}>
             Project name{' '}

@@ -21,6 +21,7 @@ export type Project = {
 }
 
 export type ScreenshotMeta = {
+  path: string
   name: string
   type: string
   size: number
@@ -31,6 +32,8 @@ export type ScreenshotMeta = {
 
 export type IssueImage = {
   id: string
+  /** Storage object path; empty until the image has been uploaded. */
+  path: string
   name: string
   type: string
   size: number
@@ -75,9 +78,15 @@ export type Issue = {
 
 export type IssueDraft = Omit<Issue, 'id' | 'projectId' | 'pageId' | 'number' | 'createdAt' | 'updatedAt'>
 
+export type ProjectViewer = {
+  projectId: string
+  email: string
+  createdAt: string
+}
+
 export type AuditData = {
-  version: 1
   projects: Project[]
   pages: AuditPage[]
   issues: Issue[]
+  viewers: ProjectViewer[]
 }

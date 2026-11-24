@@ -28,6 +28,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        env:
+          # Public client config only (anon or sb_publishable_ key). Never add a service-role/secret key here.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       # SPA routes as real directories so GitHub Pages returns HTTP 200 (not 404.html)
       - run: |
           cp dist/index.html dist/404.html

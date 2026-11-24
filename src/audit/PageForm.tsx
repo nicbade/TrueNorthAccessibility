@@ -6,7 +6,7 @@ import { button, input, label } from './ui/styles'
 
 type Props = {
   page?: AuditPage
-  onSubmit: (input: PageInput) => void
+  onSubmit: (input: PageInput) => Promise<void>
   onClose: () => void
 }
 
@@ -17,17 +17,26 @@ export default function PageForm({ page, onSubmit, onClose }: Props) {
     notes: page?.notes ?? '',
   }))
   const [error, setError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
   const id = useId()
   const formId = `${id}-form`
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!values.name.trim()) {
       setError('Enter a page name.')
       document.getElementById(`${id}-name`)?.focus()
       return
     }
-    onSubmit({ ...values, name: values.name.trim(), url: values.url.trim() })
+    setSaving(true)
+    setSaveError('')
+    try {
+      await onSubmit({ ...values, name: values.name.trim(), url: values.url.trim() })
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -39,13 +48,21 @@ export default function PageForm({ page, onSubmit, onClose }: Props) {
           <button type="button" className={button('secondary')} onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" form={formId} className={button('primary')}>
-            {page ? 'Save changes' : 'Add page'}
+          <button type="submit" form={formId} className={button('primary')} disabled={saving}>
+            {saving ? 'Saving…' : page ? 'Save changes' : 'Add page'}
           </button>
         </>
       }
     >
-      <form id={formId} onSubmit={submit} noValidate className="grid gap-4">
+      <form id={formId} onSubmit={(e) => void submit(e)} noValidate className="grid gap-4">
+        {saveError && (
+          <p
+            role="alert"
+            className="m-0 rounded border border-danger-border bg-danger-bg px-3 py-2 text-[0.8125rem] font-semibold text-danger-text sm:col-span-2"
+          >
+            {saveError}
+          </p>
+        )}
         <div>
           <label htmlFor={`${id}-name`} className={label}>
             Page name{' '}

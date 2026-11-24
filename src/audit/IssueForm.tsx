@@ -13,7 +13,6 @@ import { getWcag, parseWcagList } from '../data/wcag'
 import CommonIssueSearch from './CommonIssueSearch'
 import IssueImagesField, { addFiles } from './IssueImagesField'
 import { imageFilesFrom } from './issueImages'
-import { deleteIssueImages, putIssueImages } from './screenshots'
 import { STATUSES, type Issue, type IssueDraft, type IssueStatus } from './types'
 import Dialog from './ui/Dialog'
 import { button, hint, input, label } from './ui/styles'
@@ -22,7 +21,7 @@ type Props = {
   issue?: Issue
   platform: Platform
   pageName: string
-  onSubmit: (draft: IssueDraft) => void
+  onSubmit: (draft: IssueDraft, pending: Map<string, Blob>) => Promise<void>
   onClose: () => void
 }
 
@@ -55,6 +54,7 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
   const [error, setError] = useState('')
   const [announcement, setAnnouncement] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const descRef = useRef<HTMLTextAreaElement>(null)
   const pending = useRef(new Map<string, Blob>()).current
 
@@ -104,28 +104,24 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
       return
     }
     const { wcagText, ...rest } = values
-    const keep = new Set(values.images.map((img) => img.id))
     setSaving(true)
+    setSaveError('')
     try {
-      await putIssueImages(
-        [...pending].filter(([imgId]) => keep.has(imgId)).map(([imgId, blob]) => ({ id: imgId, blob })),
+      await onSubmit(
+        {
+          ...rest,
+          description: values.description.trim(),
+          wcag: parseWcagList(wcagText),
+          examples: values.examples.filter((x) => x.label.trim() || x.url.trim()),
+          images: values.images.map((img) => ({ ...img, alt: img.alt.trim() })),
+        },
+        pending,
       )
-    } catch {
+    } catch (err) {
       setSaving(false)
       setAnnouncement('')
-      setError('Could not save the screenshots in this browser. Storage may be full or disabled.')
-      descRef.current?.focus()
-      return
+      setSaveError(err instanceof Error ? err.message : 'Could not save the issue. Please try again.')
     }
-    onSubmit({
-      ...rest,
-      description: values.description.trim(),
-      wcag: parseWcagList(wcagText),
-      examples: values.examples.filter((x) => x.label.trim() || x.url.trim()),
-      images: values.images.map((img) => ({ ...img, alt: img.alt.trim() })),
-    })
-    const dropped = (issue?.images ?? []).filter((img) => !keep.has(img.id)).map((img) => img.id)
-    void deleteIssueImages(dropped).catch(() => undefined)
   }
 
   const updateExample = (index: number, patch: Partial<FormState['examples'][number]>) =>
@@ -163,6 +159,14 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
         noValidate
         className="mt-5 grid gap-4 sm:grid-cols-2"
       >
+        {saveError && (
+          <p
+            role="alert"
+            className="m-0 rounded border border-danger-border bg-danger-bg px-3 py-2 text-[0.8125rem] font-semibold text-danger-text sm:col-span-2"
+          >
+            {saveError}
+          </p>
+        )}
         {source && (
           <p className="m-0 flex flex-wrap items-center gap-2 rounded-md bg-surface px-3 py-2 text-[0.75rem] text-ink sm:col-span-2">
             <span>

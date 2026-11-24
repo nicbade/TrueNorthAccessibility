@@ -18,6 +18,7 @@ const PRIORITY_RANK: Record<string, number> = { Blocker: 0, Critical: 1, Major: 
 export default function PageView({ project, page }: Props) {
   const data = useAuditData()
   const id = useId()
+  const { isOwner } = data
   const [editingPage, setEditingPage] = useState(false)
   const [issueForm, setIssueForm] = useState<{ issue?: Issue } | null>(null)
   const [statusFilter, setStatusFilter] = useState<'All' | IssueStatus>('All')
@@ -39,14 +40,18 @@ export default function PageView({ project, page }: Props) {
     [issues, statusFilter, priorityFilter, sort],
   )
 
-  const removePage = () => {
+  const removePage = async () => {
     if (!window.confirm(`Delete page "${page.name}" with its ${issues.length} issue(s) and screenshot?`))
       return
-    deletePage(page.id)
-    navigate(hrefFor.project(project.id))
+    try {
+      await deletePage(page.id)
+      navigate(hrefFor.project(project.id))
+    } catch (e) {
+      setAnnouncement(e instanceof Error ? e.message : 'Could not delete the page.')
+    }
   }
 
-  const removeIssue = (issue: Issue) => {
+  const removeIssue = async (issue: Issue) => {
     const shots = issue.images.length
     if (
       !window.confirm(
@@ -54,9 +59,13 @@ export default function PageView({ project, page }: Props) {
       )
     )
       return
-    deleteIssue(issue.id)
-    setAnnouncement(`Issue #${issue.number} deleted.`)
-    document.getElementById(`${id}-add`)?.focus()
+    try {
+      await deleteIssue(issue.id)
+      setAnnouncement(`Issue #${issue.number} deleted.`)
+      document.getElementById(`${id}-add`)?.focus()
+    } catch (e) {
+      setAnnouncement(e instanceof Error ? e.message : 'Could not delete the issue.')
+    }
   }
 
   return (
@@ -76,14 +85,16 @@ export default function PageView({ project, page }: Props) {
           )}
           {page.notes && <p className="m-0 mt-1 text-[0.8125rem] text-slate">{page.notes}</p>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className={button('secondary')} onClick={() => setEditingPage(true)}>
-            Edit page
-          </button>
-          <button type="button" className={button('danger')} onClick={removePage}>
-            Delete page
-          </button>
-        </div>
+        {isOwner && (
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className={button('secondary')} onClick={() => setEditingPage(true)}>
+              Edit page
+            </button>
+            <button type="button" className={button('danger')} onClick={() => void removePage()}>
+              Delete page
+            </button>
+          </div>
+        )}
       </div>
       <div role="status" aria-live="polite" className="sr-only">
         {announcement}
@@ -97,14 +108,16 @@ export default function PageView({ project, page }: Props) {
             <h2 id={`${id}-issues`} className="m-0 font-serif text-xl">
               Issues <span className="text-slate">({issues.length})</span>
             </h2>
-            <button
-              id={`${id}-add`}
-              type="button"
-              className={button('primary')}
-              onClick={() => setIssueForm({})}
-            >
-              <span aria-hidden="true">+</span> Add issue
-            </button>
+            {isOwner && (
+              <button
+                id={`${id}-add`}
+                type="button"
+                className={button('primary')}
+                onClick={() => setIssueForm({})}
+              >
+                <span aria-hidden="true">+</span> Add issue
+              </button>
+            )}
           </div>
 
           {issues.length > 0 && (
@@ -162,8 +175,14 @@ export default function PageView({ project, page }: Props) {
           {issues.length === 0 ? (
             <div className={`${card} mt-3 p-8 text-center`}>
               <p className="mx-auto my-0 text-[0.875rem] text-slate">
-                No issues logged for this page. Use <strong>Add issue</strong> and search the common issues
-                library to fill in the details quickly.
+                {isOwner ? (
+                  <>
+                    No issues logged for this page. Use <strong>Add issue</strong> and search the common
+                    issues library to fill in the details quickly.
+                  </>
+                ) : (
+                  'No issues have been logged for this page.'
+                )}
               </p>
             </div>
           ) : (
@@ -221,45 +240,53 @@ export default function PageView({ project, page }: Props) {
                           )}
                         </details>
                       )}
-                      <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-divider pt-3">
-                        <div className="flex items-center gap-2">
-                          <label
-                            htmlFor={`${id}-st-${issue.id}`}
-                            className="text-[0.75rem] font-semibold text-slate"
-                          >
-                            Status<span className="sr-only"> for issue #{issue.number}</span>
-                          </label>
-                          <select
-                            id={`${id}-st-${issue.id}`}
-                            className={`${input} w-auto py-1`}
-                            value={issue.status}
-                            onChange={(e) => {
-                              updateIssueStatus(issue.id, e.target.value as IssueStatus)
-                              setAnnouncement(`Issue #${issue.number} marked ${e.target.value}.`)
-                            }}
-                          >
-                            {STATUSES.map((s) => (
-                              <option key={s}>{s}</option>
-                            ))}
-                          </select>
+                      {isOwner && (
+                        <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-divider pt-3">
+                          <div className="flex items-center gap-2">
+                            <label
+                              htmlFor={`${id}-st-${issue.id}`}
+                              className="text-[0.75rem] font-semibold text-slate"
+                            >
+                              Status<span className="sr-only"> for issue #{issue.number}</span>
+                            </label>
+                            <select
+                              id={`${id}-st-${issue.id}`}
+                              className={`${input} w-auto py-1`}
+                              value={issue.status}
+                              onChange={(e) => {
+                                const next = e.target.value as IssueStatus
+                                updateIssueStatus(issue.id, next).then(
+                                  () => setAnnouncement(`Issue #${issue.number} marked ${next}.`),
+                                  (err) =>
+                                    setAnnouncement(
+                                      err instanceof Error ? err.message : 'Could not update the status.',
+                                    ),
+                                )
+                              }}
+                            >
+                              {STATUSES.map((s) => (
+                                <option key={s}>{s}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              className={button('ghost')}
+                              onClick={() => setIssueForm({ issue })}
+                            >
+                              Edit<span className="sr-only"> issue #{issue.number}</span>
+                            </button>
+                            <button
+                              type="button"
+                              className={button('ghost', 'text-danger-text')}
+                              onClick={() => void removeIssue(issue)}
+                            >
+                              Delete<span className="sr-only"> issue #{issue.number}</span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            className={button('ghost')}
-                            onClick={() => setIssueForm({ issue })}
-                          >
-                            Edit<span className="sr-only"> issue #{issue.number}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className={button('ghost', 'text-danger-text')}
-                            onClick={() => removeIssue(issue)}
-                          >
-                            Delete<span className="sr-only"> issue #{issue.number}</span>
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </article>
                   </li>
                 ))}
@@ -273,8 +300,8 @@ export default function PageView({ project, page }: Props) {
         <PageForm
           page={page}
           onClose={() => setEditingPage(false)}
-          onSubmit={(input) => {
-            updatePage(page.id, input)
+          onSubmit={async (input) => {
+            await updatePage(page.id, input)
             setEditingPage(false)
           }}
         />
@@ -285,8 +312,8 @@ export default function PageView({ project, page }: Props) {
           platform={project.platform}
           pageName={page.name}
           onClose={() => setIssueForm(null)}
-          onSubmit={(draft) => {
-            const saved = saveIssue(page, draft, issueForm.issue?.id)
+          onSubmit={async (draft, pending) => {
+            const saved = await saveIssue(page, draft, pending, issueForm.issue?.id)
             setIssueForm(null)
             setAnnouncement(
               issueForm.issue ? `Issue #${saved.number} saved.` : `Issue #${saved.number} added.`,

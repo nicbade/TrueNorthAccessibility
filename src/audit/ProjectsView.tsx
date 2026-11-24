@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ImportBanner from './ImportBanner'
 import ProjectForm from './ProjectForm'
 import { isOpen } from './metrics'
 import { hrefFor, navigate } from './router'
@@ -18,15 +19,27 @@ export default function ProjectsView() {
             Audit projects
           </h1>
           <p className="m-0 mt-1 text-[0.875rem] text-slate">
-            {projects.length} project{projects.length === 1 ? '' : 's'} · stored in this browser
+            {projects.length} project{projects.length === 1 ? '' : 's'}
+            {data.isOwner ? '' : ' shared with you · view only'}
           </p>
         </div>
-        <button type="button" className={button('primary')} onClick={() => setCreating(true)}>
-          <span aria-hidden="true">+</span> New project
-        </button>
+        {data.isOwner && (
+          <button type="button" className={button('primary')} onClick={() => setCreating(true)}>
+            <span aria-hidden="true">+</span> New project
+          </button>
+        )}
       </div>
 
-      {projects.length === 0 ? (
+      <ImportBanner />
+
+      {projects.length === 0 && !data.isOwner ? (
+        <div className={`${card} mt-8 p-10 text-center`}>
+          <h2 className="m-0 font-serif text-xl">No projects shared with you yet</h2>
+          <p className="mx-auto mt-2 text-[0.875rem] text-slate">
+            When the audit owner invites this email address to a project, it will appear here.
+          </p>
+        </div>
+      ) : projects.length === 0 ? (
         <div className={`${card} mt-8 p-10 text-center`}>
           <h2 className="m-0 font-serif text-xl">No audit projects yet</h2>
           <p className="mx-auto mt-2 text-[0.875rem] text-slate">
@@ -80,8 +93,8 @@ export default function ProjectsView() {
       {creating && (
         <ProjectForm
           onClose={() => setCreating(false)}
-          onSubmit={(input) => {
-            const p = createProject(input)
+          onSubmit={async (input) => {
+            const p = await createProject(input)
             setCreating(false)
             navigate(hrefFor.project(p.id))
           }}
