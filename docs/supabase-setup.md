@@ -57,27 +57,41 @@ that link too, but it only completes sign-in **in the browser that requested it*
   Add the viewer, then tell them to go to `https://truenorth-accessibility.com/audit-hub` and request their own
   link with that email.
 
-### 3a. Free custom SMTP with Resend
+### 3a. Custom SMTP with Gmail
 
-The Resend free plan allows 3,000 emails a month, 100 a day, with one domain.
+Audit Hub sends very little email, so a Gmail account is enough. Gmail allows about 500 messages a day.
 
-1. Create an account at [resend.com](https://resend.com).
-2. Go to **Domains → Add Domain**, enter `truenorth-accessibility.com`, and pick a US region. Add the DNS
-   records Resend shows (an MX and SPF TXT record on the `send` subdomain and a DKIM TXT record at
-   `resend._domainkey`) at the DNS provider for truenorth-accessibility.com, then click **Verify**. DNS
-   changes can take a few minutes to a few hours. These records don't affect the website or any existing
-   inbox on the domain.
-3. Go to **API Keys → Create API Key**, choose **Sending access**, limit it to `truenorth-accessibility.com`,
-   and copy the key (`re_…`). It is shown once. It goes only into Supabase, never into GitHub or the site.
-4. In Supabase, open **Authentication → Emails → SMTP Settings**, turn on **Enable custom SMTP**, and enter
-   **Sender email** `audit-hub@truenorth-accessibility.com`, **Sender name** `TrueNorth Audit Hub`,
-   **Host** `smtp.resend.com`, **Port** `465`, **Username** `resend`, **Password** the API key.
-   Click **Save**. The sender address doesn't need a real mailbox, but it must be on the verified domain.
-   Alternatively, Resend's **Integrations → Supabase** fills in these settings for you.
-5. Open **Authentication → Rate Limits** and raise **Rate limit for sending emails** to fit your use, for
-   example 30 an hour.
-6. Request a sign-in link on `/audit-hub` to confirm it arrives from `audit-hub@truenorth-accessibility.com`,
-   then do step 5 above (email templates).
+1. Turn on **2-Step Verification** for the Gmail account at
+   [myaccount.google.com/security](https://myaccount.google.com/security). Google requires it for App Passwords.
+2. Create an App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+   Name it `Supabase Audit Hub` and copy the 16-character password. Google shows it once. It goes only into
+   Supabase, never into GitHub or the site. Your normal Gmail password will not work here.
+3. In Supabase, open **Authentication → Emails → SMTP Settings**, turn on **Enable custom SMTP**, and enter:
+   - **Sender email**: your full Gmail address, the same one used as the username. Gmail rewrites other
+     sender addresses.
+   - **Sender name**: `TrueNorth Audit Hub`
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `465`
+   - **Username**: your full Gmail address
+   - **Password**: the App Password, entered without spaces
+
+   Click **Save**.
+4. Open **Authentication → Rate Limits** and set **Rate limit for sending emails** to fit your use, for example
+   30 an hour. This stays well under Gmail's daily limit.
+5. Request a sign-in link on `/audit-hub` and confirm that it arrives from your Gmail address with the name
+   "TrueNorth Audit Hub". If it doesn't arrive, check the recipient's spam folder.
+6. Do step 5 above (email templates).
+
+If you change your Google password, Google revokes App Passwords. Create a new one and update Supabase.
+
+**Alternative: Resend.** If you later want email to come from `@truenorth-accessibility.com`, create a free
+[Resend](https://resend.com) account and verify the domain under **Domains** by adding the DNS records it shows.
+Then create a sending-only API key and enter these in the same Supabase SMTP settings:
+- **Host**: `smtp.resend.com`
+- **Port**: `465`
+- **Username**: `resend`
+- **Password**: the API key
+- **Sender email**: an address on that domain, for example `audit-hub@truenorth-accessibility.com`
 
 ## 4. Add the GitHub secrets (done)
 
