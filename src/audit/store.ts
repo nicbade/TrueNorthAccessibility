@@ -1,166 +1,407 @@
 import { useSyncExternalStore } from 'react'
-import { deleteIssueImages, deleteScreenshot } from './screenshots'
-import type { AuditData, AuditPage, Issue, IssueDraft, Project } from './types'
+import { db, extensionFor, removeObjects, uploadObject } from './supabase'
+import type { AuditData, AuditPage, Issue, IssueDraft, IssueImage, Project, ProjectViewer } from './types'
 
-const STORAGE_KEY = 'truenorth-audit-hub:v1'
-
-const EMPTY: AuditData = { version: 1, projects: [], pages: [], issues: [] }
-
-function load(): AuditData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return EMPTY
-    const parsed = JSON.parse(raw) as AuditData
-    return {
-      version: 1,
-      projects: parsed.projects ?? [],
-      pages: parsed.pages ?? [],
-      issues: (parsed.issues ?? []).map((i) => ({ ...i, images: i.images ?? [] })),
-    }
-  } catch {
-    return EMPTY
-  }
+export type HubState = AuditData & {
+  status: 'idle' | 'loading' | 'ready' | 'error'
+  error: string
+  isOwner: boolean
+  userId: string | null
 }
 
-let state: AuditData = load()
+const EMPTY: HubState = {
+  status: 'idle',
+  error: '',
+  isOwner: false,
+  userId: null,
+  projects: [],
+  pages: [],
+  issues: [],
+  viewers: [],
+}
+
+let state: HubState = EMPTY
 const listeners = new Set<() => void>()
 
-export class StorageError extends Error {}
-
-function commit(next: AuditData) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  } catch {
-    throw new StorageError('Could not save to this browser. Storage may be full or disabled.')
-  }
-  state = next
+function commit(patch: Partial<HubState>) {
+  state = { ...state, ...patch }
   listeners.forEach((l) => l())
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener)
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) {
-      state = load()
-      listener()
-    }
+export function useAuditData(): HubState {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb)
+      return () => listeners.delete(cb)
+    },
+    () => state,
+  )
+}
+
+export class SaveError extends Error {}
+
+function check<T>(result: { data: T; error: { message: string } | null }, action: string): T {
+  if (result.error) throw new SaveError(`Could not ${action}: ${result.error.message}`)
+  return result.data
+}
+
+// ─── Row mapping ───────────────────────────────────────────────────────────
+
+type Row = Record<string, any>
+
+const toProject = (r: Row): Project => ({
+  id: r.id,
+  name: r.name,
+  client: r.client,
+  url: r.url,
+  platform: r.platform,
+  standard: r.standard,
+  auditor: r.auditor,
+  startDate: r.start_date,
+  notes: r.notes,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+})
+
+const fromProject = (p: ProjectInput) => ({
+  name: p.name,
+  client: p.client,
+  url: p.url,
+  platform: p.platform,
+  standard: p.standard,
+  auditor: p.auditor,
+  start_date: p.startDate,
+  notes: p.notes,
+})
+
+const toPage = (r: Row): AuditPage => ({
+  id: r.id,
+  projectId: r.project_id,
+  name: r.name,
+  url: r.url,
+  notes: r.notes,
+  screenshot: r.screenshot ?? null,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+})
+
+const toImage = (r: Row): IssueImage => ({
+  id: r.id,
+  path: r.storage_path,
+  name: r.name,
+  type: r.type,
+  size: Number(r.size),
+  width: r.width,
+  height: r.height,
+  alt: r.alt,
+  createdAt: r.created_at,
+})
+
+const toIssue = (r: Row, images: IssueImage[]): Issue => ({
+  id: r.id,
+  projectId: r.project_id,
+  pageId: r.page_id,
+  number: r.number,
+  description: r.description,
+  expectedBehavior: r.expected_behavior,
+  fix: r.fix,
+  priority: r.priority,
+  examples: r.examples ?? [],
+  wcag: r.wcag ?? [],
+  category: r.category,
+  comments: r.comments,
+  status: r.status,
+  location: r.location,
+  commonIssueId: r.common_issue_id,
+  images,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+})
+
+export const fromIssueDraft = (d: Omit<IssueDraft, 'images'>) => ({
+  description: d.description,
+  expected_behavior: d.expectedBehavior,
+  fix: d.fix,
+  priority: d.priority,
+  examples: d.examples,
+  wcag: d.wcag,
+  category: d.category,
+  comments: d.comments,
+  status: d.status,
+  location: d.location,
+  common_issue_id: d.commonIssueId,
+})
+
+const toViewer = (r: Row): ProjectViewer => ({
+  projectId: r.project_id,
+  email: r.email,
+  createdAt: r.created_at,
+})
+
+// ─── Loading ───────────────────────────────────────────────────────────────
+
+export async function loadHubData(userId: string) {
+  // A reload for the same user keeps the current data on screen so views don't remount mid-task.
+  if (state.userId !== userId || state.status !== 'ready') commit({ ...EMPTY, status: 'loading', userId })
+  try {
+    const client = db()
+    const [owners, projects, pages, issues, images, viewers] = await Promise.all([
+      client.from('app_owners').select('user_id').eq('user_id', userId),
+      client.from('projects').select('*').order('updated_at', { ascending: false }),
+      client.from('pages').select('*').order('created_at'),
+      client.from('issues').select('*').order('number'),
+      client.from('issue_images').select('*').order('position'),
+      client.from('project_viewers').select('*').order('created_at'),
+    ])
+    const imageRows = check(images, 'load issue images') ?? []
+    const byIssue = new Map<string, IssueImage[]>()
+    imageRows.forEach((r: Row) => byIssue.set(r.issue_id, [...(byIssue.get(r.issue_id) ?? []), toImage(r)]))
+    commit({
+      status: 'ready',
+      isOwner: (check(owners, 'check your access') ?? []).length > 0,
+      projects: (check(projects, 'load projects') ?? []).map(toProject),
+      pages: (check(pages, 'load pages') ?? []).map(toPage),
+      issues: (check(issues, 'load issues') ?? []).map((r: Row) => toIssue(r, byIssue.get(r.id) ?? [])),
+      viewers: (check(viewers, 'load viewers') ?? []).map(toViewer),
+    })
+  } catch (e) {
+    commit({ status: 'error', error: e instanceof Error ? e.message : 'Could not load audit data.' })
   }
-  window.addEventListener('storage', onStorage)
-  return () => {
-    listeners.delete(listener)
-    window.removeEventListener('storage', onStorage)
-  }
 }
 
-export function useAuditData(): AuditData {
-  return useSyncExternalStore(subscribe, () => state)
+export function resetHubData() {
+  commit(EMPTY)
 }
 
-function dropImagesOf(issues: Issue[]) {
-  const ids = issues.flatMap((i) => i.images.map((img) => img.id))
-  void deleteIssueImages(ids).catch(() => undefined)
-}
-
-const now = () => new Date().toISOString()
-const uid = () => crypto.randomUUID()
+// ─── Projects ──────────────────────────────────────────────────────────────
 
 export type ProjectInput = Omit<Project, 'id' | 'createdAt' | 'updatedAt'>
 export type PageInput = Pick<AuditPage, 'name' | 'url' | 'notes'>
 
-export function createProject(input: ProjectInput): Project {
-  const project: Project = { ...input, id: uid(), createdAt: now(), updatedAt: now() }
-  commit({ ...state, projects: [...state.projects, project] })
+export async function createProject(input: ProjectInput): Promise<Project> {
+  const row = check(
+    await db().from('projects').insert(fromProject(input)).select().single(),
+    'create the project',
+  )
+  const project = toProject(row)
+  commit({ projects: [project, ...state.projects] })
   return project
 }
 
-export function updateProject(id: string, input: ProjectInput) {
-  commit({
-    ...state,
-    projects: state.projects.map((p) => (p.id === id ? { ...p, ...input, updatedAt: now() } : p)),
-  })
+export async function updateProject(id: string, input: ProjectInput) {
+  const row = check(
+    await db().from('projects').update(fromProject(input)).eq('id', id).select().single(),
+    'save the project',
+  )
+  commit({ projects: state.projects.map((p) => (p.id === id ? toProject(row) : p)) })
 }
 
-export function deleteProject(id: string) {
-  const pageIds = state.pages.filter((p) => p.projectId === id).map((p) => p.id)
-  const removed = state.issues.filter((i) => i.projectId === id)
+export async function deleteProject(id: string) {
+  const paths = [
+    ...state.pages.filter((p) => p.projectId === id).map((p) => p.screenshot?.path ?? ''),
+    ...state.issues.filter((i) => i.projectId === id).flatMap((i) => i.images.map((img) => img.path)),
+  ]
+  check(await db().from('projects').delete().eq('id', id), 'delete the project')
   commit({
-    ...state,
     projects: state.projects.filter((p) => p.id !== id),
     pages: state.pages.filter((p) => p.projectId !== id),
     issues: state.issues.filter((i) => i.projectId !== id),
+    viewers: state.viewers.filter((v) => v.projectId !== id),
   })
-  pageIds.forEach((pid) => void deleteScreenshot(pid).catch(() => undefined))
-  dropImagesOf(removed)
+  await removeObjects(paths).catch(() => undefined)
 }
 
-export function createPage(projectId: string, input: PageInput): AuditPage {
-  const page: AuditPage = {
-    ...input,
-    id: uid(),
-    projectId,
-    screenshot: null,
-    createdAt: now(),
-    updatedAt: now(),
-  }
-  commit({ ...state, pages: [...state.pages, page] })
+// ─── Viewers ───────────────────────────────────────────────────────────────
+
+export async function addViewer(projectId: string, email: string): Promise<ProjectViewer> {
+  const row = check(
+    await db()
+      .from('project_viewers')
+      .insert({ project_id: projectId, email: email.trim() })
+      .select()
+      .single(),
+    'add the viewer',
+  )
+  const viewer = toViewer(row)
+  commit({ viewers: [...state.viewers, viewer] })
+  return viewer
+}
+
+export async function removeViewer(projectId: string, email: string) {
+  check(
+    await db().from('project_viewers').delete().eq('project_id', projectId).eq('email', email),
+    'remove the viewer',
+  )
+  commit({ viewers: state.viewers.filter((v) => !(v.projectId === projectId && v.email === email)) })
+}
+
+// ─── Pages ─────────────────────────────────────────────────────────────────
+
+export async function createPage(projectId: string, input: PageInput): Promise<AuditPage> {
+  const row = check(
+    await db()
+      .from('pages')
+      .insert({ project_id: projectId, ...input })
+      .select()
+      .single(),
+    'add the page',
+  )
+  const page = toPage(row)
+  commit({ pages: [...state.pages, page] })
   return page
 }
 
-export function updatePage(id: string, input: Partial<Omit<AuditPage, 'id' | 'projectId'>>) {
-  commit({
-    ...state,
-    pages: state.pages.map((p) => (p.id === id ? { ...p, ...input, updatedAt: now() } : p)),
-  })
+export async function updatePage(id: string, input: Partial<PageInput & Pick<AuditPage, 'screenshot'>>) {
+  const row = check(await db().from('pages').update(input).eq('id', id).select().single(), 'save the page')
+  commit({ pages: state.pages.map((p) => (p.id === id ? toPage(row) : p)) })
 }
 
-export function deletePage(id: string) {
-  const removed = state.issues.filter((i) => i.pageId === id)
+export async function setPageScreenshot(
+  page: AuditPage,
+  file: File,
+  size: { width: number; height: number },
+) {
+  const path = `${page.projectId}/pages/${page.id}/${crypto.randomUUID()}.${extensionFor(file.type)}`
+  await uploadObject(path, file, file.type)
+  const previous = page.screenshot?.path
+  await updatePage(page.id, {
+    screenshot: {
+      path,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      ...size,
+      updatedAt: new Date().toISOString(),
+    },
+  })
+  if (previous) await removeObjects([previous]).catch(() => undefined)
+}
+
+export async function removePageScreenshot(page: AuditPage) {
+  const previous = page.screenshot?.path
+  await updatePage(page.id, { screenshot: null })
+  if (previous) await removeObjects([previous]).catch(() => undefined)
+}
+
+export async function deletePage(id: string) {
+  const page = state.pages.find((p) => p.id === id)
+  const paths = [
+    page?.screenshot?.path ?? '',
+    ...state.issues.filter((i) => i.pageId === id).flatMap((i) => i.images.map((img) => img.path)),
+  ]
+  check(await db().from('pages').delete().eq('id', id), 'delete the page')
   commit({
-    ...state,
     pages: state.pages.filter((p) => p.id !== id),
     issues: state.issues.filter((i) => i.pageId !== id),
   })
-  void deleteScreenshot(id).catch(() => undefined)
-  dropImagesOf(removed)
+  await removeObjects(paths).catch(() => undefined)
 }
 
-export function saveIssue(page: AuditPage, draft: IssueDraft, existingId?: string): Issue {
-  if (existingId) {
-    let saved!: Issue
-    commit({
-      ...state,
-      issues: state.issues.map((i) => {
-        if (i.id !== existingId) return i
-        saved = { ...i, ...draft, updatedAt: now() }
-        return saved
-      }),
-    })
-    return saved
+// ─── Issues ────────────────────────────────────────────────────────────────
+
+/** Saves the issue, uploads new images (blobs keyed by image id) and removes dropped ones. */
+export async function saveIssue(
+  page: AuditPage,
+  draft: IssueDraft,
+  pending: Map<string, Blob>,
+  existingId?: string,
+): Promise<Issue> {
+  const client = db()
+  const { images, ...fields } = draft
+  const existing = existingId ? state.issues.find((i) => i.id === existingId) : undefined
+  const issueId = existing?.id ?? crypto.randomUUID()
+
+  let row: Row | null
+  if (existing) {
+    row = check<Row | null>(
+      await client.from('issues').update(fromIssueDraft(fields)).eq('id', issueId).select().single(),
+      'save the issue',
+    )
+  } else {
+    const number =
+      state.issues.filter((i) => i.projectId === page.projectId).reduce((m, i) => Math.max(m, i.number), 0) +
+      1
+    row = check<Row | null>(
+      await client
+        .from('issues')
+        .insert({
+          id: issueId,
+          project_id: page.projectId,
+          page_id: page.id,
+          number,
+          ...fromIssueDraft(fields),
+        })
+        .select()
+        .single(),
+      'add the issue',
+    )
   }
-  const number =
-    state.issues.filter((i) => i.projectId === page.projectId).reduce((m, i) => Math.max(m, i.number), 0) + 1
-  const issue: Issue = {
-    ...draft,
-    id: uid(),
-    projectId: page.projectId,
-    pageId: page.id,
-    number,
-    createdAt: now(),
-    updatedAt: now(),
+
+  const saved: IssueImage[] = []
+  for (const img of images) {
+    const blob = pending.get(img.id)
+    const path = img.path || `${page.projectId}/issues/${issueId}/${img.id}.${extensionFor(img.type)}`
+    if (blob) await uploadObject(path, blob, img.type)
+    saved.push({ ...img, path })
   }
-  commit({ ...state, issues: [...state.issues, issue] })
+  const keep = new Set(saved.map((img) => img.id))
+  const dropped = (existing?.images ?? []).filter((img) => !keep.has(img.id))
+  if (dropped.length) {
+    check(
+      await client
+        .from('issue_images')
+        .delete()
+        .in(
+          'id',
+          dropped.map((img) => img.id),
+        ),
+      'remove screenshots',
+    )
+  }
+  if (saved.length) {
+    check(
+      await client.from('issue_images').upsert(
+        saved.map((img, position) => ({
+          id: img.id,
+          issue_id: issueId,
+          project_id: page.projectId,
+          position,
+          storage_path: img.path,
+          name: img.name,
+          type: img.type,
+          size: img.size,
+          width: img.width,
+          height: img.height,
+          alt: img.alt,
+        })),
+      ),
+      'save screenshots',
+    )
+  }
+  await removeObjects(dropped.map((img) => img.path)).catch(() => undefined)
+
+  const issue = toIssue(row!, saved)
+  commit({
+    issues: existing ? state.issues.map((i) => (i.id === issueId ? issue : i)) : [...state.issues, issue],
+  })
   return issue
 }
 
-export function updateIssueStatus(id: string, status: Issue['status']) {
+export async function updateIssueStatus(id: string, status: Issue['status']) {
+  const row = check(
+    await db().from('issues').update({ status }).eq('id', id).select().single(),
+    'update the status',
+  )
   commit({
-    ...state,
-    issues: state.issues.map((i) => (i.id === id ? { ...i, status, updatedAt: now() } : i)),
+    issues: state.issues.map((i) =>
+      i.id === id ? { ...i, status: row.status, updatedAt: row.updated_at } : i,
+    ),
   })
 }
 
-export function deleteIssue(id: string) {
-  const removed = state.issues.filter((i) => i.id === id)
-  commit({ ...state, issues: state.issues.filter((i) => i.id !== id) })
-  dropImagesOf(removed)
+export async function deleteIssue(id: string) {
+  const issue = state.issues.find((i) => i.id === id)
+  check(await db().from('issues').delete().eq('id', id), 'delete the issue')
+  commit({ issues: state.issues.filter((i) => i.id !== id) })
+  await removeObjects(issue?.images.map((img) => img.path) ?? []).catch(() => undefined)
 }

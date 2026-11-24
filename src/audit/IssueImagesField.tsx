@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
-import { imageFilesFrom, toIssueImage, useIssueImageUrl } from './issueImages'
+import { imageFilesFrom, toIssueImage, useImageUrl } from './issueImages'
 import type { IssueImage } from './types'
 import { button, hint, input, label } from './ui/styles'
 
@@ -11,7 +11,7 @@ type Props = {
 }
 
 function Thumb({ image, blob }: { image: IssueImage; blob?: Blob }) {
-  const url = useIssueImageUrl(image.id, blob)
+  const url = useImageUrl(image.path, blob)
   return (
     <div className="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded border border-divider bg-cream">
       {url ? (
@@ -117,7 +117,7 @@ export default function IssueImagesField({ images, pending, onChange, onAnnounce
         </button>
         <p id={`${id}-hint`} className={`${hint} m-0 flex-1`}>
           Drag and drop images here, or paste from the clipboard (Ctrl+V or ⌘V) while focus is in this form.
-          Images are stored only in this browser.
+          Images are stored privately in Supabase when you save the issue.
         </p>
       </div>
       {error && (

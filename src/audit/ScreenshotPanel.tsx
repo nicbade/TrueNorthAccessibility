@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type DragEvent } from 'react'
-import { deleteScreenshot, getScreenshot, putScreenshot, readImageSize } from './screenshots'
-import { updatePage } from './store'
+import { readImageSize } from './browserArchive'
+import { removePageScreenshot, setPageScreenshot, useAuditData } from './store'
+import { signedUrl } from './supabase'
 import type { AuditPage } from './types'
 import { button, card } from './ui/styles'
 
@@ -12,6 +13,7 @@ function formatBytes(n: number) {
 
 export default function ScreenshotPanel({ page }: Props) {
   const id = useId()
+  const { isOwner } = useAuditData()
   const fileRef = useRef<HTMLInputElement>(null)
   const [url, setUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -20,25 +22,24 @@ export default function ScreenshotPanel({ page }: Props) {
   const [error, setError] = useState('')
   const [fit, setFit] = useState(true)
   const [dragging, setDragging] = useState(false)
-  const stamp = page.screenshot?.updatedAt
+  const path = page.screenshot?.path ?? ''
 
   useEffect(() => {
-    let objectUrl: string | null = null
     let cancelled = false
+    setUrl(null)
+    if (!path) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
-    getScreenshot(page.id)
-      .then((blob) => {
-        if (cancelled) return
-        objectUrl = blob ? URL.createObjectURL(blob) : null
-        setUrl(objectUrl)
-      })
-      .catch(() => !cancelled && setError('Could not read saved screenshots from this browser.'))
+    signedUrl(path)
+      .then((u) => !cancelled && setUrl(u))
+      .catch(() => !cancelled && setError('Could not load the screenshot.'))
       .finally(() => !cancelled && setLoading(false))
     return () => {
       cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [page.id, stamp])
+  }, [path])
 
   const upload = async (file: File | undefined) => {
     if (!file) return
@@ -50,16 +51,7 @@ export default function ScreenshotPanel({ page }: Props) {
     setBusy(true)
     try {
       const size = await readImageSize(file)
-      await putScreenshot(page.id, file)
-      updatePage(page.id, {
-        screenshot: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          ...size,
-          updatedAt: new Date().toISOString(),
-        },
-      })
+      await setPageScreenshot(page, file, size)
       setMessage(`Screenshot ${file.name} uploaded.`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed.')
@@ -71,9 +63,12 @@ export default function ScreenshotPanel({ page }: Props) {
 
   const remove = async () => {
     if (!window.confirm('Remove this screenshot?')) return
-    await deleteScreenshot(page.id)
-    updatePage(page.id, { screenshot: null })
-    setMessage('Screenshot removed.')
+    try {
+      await removePageScreenshot(page)
+      setMessage('Screenshot removed.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove the screenshot.')
+    }
   }
 
   const onDrop = (e: DragEvent) => {
@@ -108,27 +103,31 @@ export default function ScreenshotPanel({ page }: Props) {
               Actual size
             </button>
           )}
-          <input
-            ref={fileRef}
-            id={`${id}-file`}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => void upload(e.target.files?.[0])}
-            disabled={busy}
-          />
-          <button
-            type="button"
-            className={button(url ? 'secondary' : 'primary')}
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-          >
-            {busy ? 'Uploading…' : url ? 'Replace' : 'Upload screenshot'}
-          </button>
-          {url && (
-            <button type="button" className={button('danger')} onClick={() => void remove()}>
-              Remove<span className="sr-only"> screenshot</span>
-            </button>
+          {isOwner && (
+            <>
+              <input
+                ref={fileRef}
+                id={`${id}-file`}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => void upload(e.target.files?.[0])}
+                disabled={busy}
+              />
+              <button
+                type="button"
+                className={button(url ? 'secondary' : 'primary')}
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+              >
+                {busy ? 'Uploading…' : url ? 'Replace' : 'Upload screenshot'}
+              </button>
+              {url && (
+                <button type="button" className={button('danger')} onClick={() => void remove()}>
+                  Remove<span className="sr-only"> screenshot</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -160,6 +159,8 @@ export default function ScreenshotPanel({ page }: Props) {
             className={fit ? 'block h-auto w-full' : 'block max-w-none'}
           />
         </div>
+      ) : !isOwner ? (
+        <p className="m-0 p-6 text-[0.875rem] text-slate">No screenshot has been uploaded for this page.</p>
       ) : (
         <div
           onDragOver={(e) => {
@@ -186,7 +187,7 @@ export default function ScreenshotPanel({ page }: Props) {
           </svg>
           <p className="m-0 mt-3 text-[0.875rem] font-semibold text-ink">No screenshot yet</p>
           <p className="m-0 mt-1 text-[0.8125rem] text-slate">
-            Upload a full-page capture, or drag and drop an image here. It is stored only in this browser.
+            Upload a full-page capture, or drag and drop an image here. It is stored privately in Supabase.
           </p>
         </div>
       )}

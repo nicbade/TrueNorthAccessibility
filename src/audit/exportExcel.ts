@@ -3,7 +3,7 @@ import type { ExampleKind } from '../data/commonIssues'
 import { getWcag } from '../data/wcag'
 import { computeMetrics, UNSET } from './metrics'
 import { imageAlt } from './issueImages'
-import { getIssueImage } from './screenshots'
+import { downloadObject } from './supabase'
 import type { AuditPage, Issue, IssueImage, Project } from './types'
 
 const ACCENT = 'FF2A5C1E'
@@ -45,8 +45,8 @@ async function embedIssueImages(wb: Workbook, issues: Issue[]): Promise<Map<stri
   const embedded = new Map<string, EmbeddedImage>()
   for (const img of issues.flatMap((i) => i.images)) {
     try {
-      const blob = await getIssueImage(img.id)
-      if (!blob) continue
+      if (!img.path) continue
+      const blob = await downloadObject(img.path)
       const thumb = await renderThumbnail(blob)
       // exceljs's typings expect a Node Buffer; an ArrayBuffer works in the browser build.
       const imageId = wb.addImage({ buffer: thumb.buffer as never, extension: 'png' })

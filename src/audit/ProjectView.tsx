@@ -4,6 +4,7 @@ import { downloadProjectWorkbook } from './exportExcel'
 import { computeMetrics, UNSET } from './metrics'
 import PageForm from './PageForm'
 import ProjectForm from './ProjectForm'
+import ViewerAccess from './ViewerAccess'
 import { hrefFor, navigate } from './router'
 import { createPage, deleteProject, updateProject, useAuditData } from './store'
 import type { Project } from './types'
@@ -14,6 +15,7 @@ type Props = { project: Project }
 
 export default function ProjectView({ project }: Props) {
   const data = useAuditData()
+  const { isOwner } = data
   const [editing, setEditing] = useState(false)
   const [addingPage, setAddingPage] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -39,15 +41,19 @@ export default function ProjectView({ project }: Props) {
     }
   }
 
-  const remove = () => {
+  const remove = async () => {
     if (
       !window.confirm(
         `Delete "${project.name}" and all of its pages, issues and screenshots? This cannot be undone.`,
       )
     )
       return
-    deleteProject(project.id)
-    navigate(hrefFor.projects())
+    try {
+      await deleteProject(project.id)
+      navigate(hrefFor.projects())
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : 'Could not delete the project.')
+    }
   }
 
   const stats: [string, number, string][] = [
@@ -102,12 +108,16 @@ export default function ProjectView({ project }: Props) {
             </svg>
             {exporting ? 'Exporting…' : 'Export to Excel'}
           </button>
-          <button type="button" className={button('secondary')} onClick={() => setEditing(true)}>
-            Edit project
-          </button>
-          <button type="button" className={button('danger')} onClick={remove}>
-            Delete
-          </button>
+          {isOwner && (
+            <>
+              <button type="button" className={button('secondary')} onClick={() => setEditing(true)}>
+                Edit project
+              </button>
+              <button type="button" className={button('danger')} onClick={() => void remove()}>
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div role="status" aria-live="polite" className="sr-only">
@@ -173,15 +183,18 @@ export default function ProjectView({ project }: Props) {
           <h2 id="pages-heading" className="m-0 font-serif text-xl">
             Pages
           </h2>
-          <button type="button" className={button('primary')} onClick={() => setAddingPage(true)}>
-            <span aria-hidden="true">+</span> Add page
-          </button>
+          {isOwner && (
+            <button type="button" className={button('primary')} onClick={() => setAddingPage(true)}>
+              <span aria-hidden="true">+</span> Add page
+            </button>
+          )}
         </div>
         {pages.length === 0 ? (
           <div className={`${card} p-8 text-center`}>
             <p className="mx-auto my-0 text-[0.875rem] text-slate">
-              No pages yet. Add each page or screen you audit to attach a screenshot and log issues against
-              it.
+              {isOwner
+                ? 'No pages yet. Add each page or screen you audit to attach a screenshot and log issues against it.'
+                : 'No pages have been added to this project yet.'}
             </p>
           </div>
         ) : (
@@ -243,12 +256,14 @@ export default function ProjectView({ project }: Props) {
         )}
       </section>
 
+      {isOwner && <ViewerAccess project={project} />}
+
       {editing && (
         <ProjectForm
           project={project}
           onClose={() => setEditing(false)}
-          onSubmit={(input) => {
-            updateProject(project.id, input)
+          onSubmit={async (input) => {
+            await updateProject(project.id, input)
             setEditing(false)
           }}
         />
@@ -256,8 +271,8 @@ export default function ProjectView({ project }: Props) {
       {addingPage && (
         <PageForm
           onClose={() => setAddingPage(false)}
-          onSubmit={(input) => {
-            const page = createPage(project.id, input)
+          onSubmit={async (input) => {
+            const page = await createPage(project.id, input)
             setAddingPage(false)
             navigate(hrefFor.page(project.id, page.id))
           }}

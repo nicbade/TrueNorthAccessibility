@@ -1,29 +1,33 @@
 import { useEffect, useState } from 'react'
-import { getIssueImage, readImageSize } from './screenshots'
+import { readImageSize } from './browserArchive'
+import { signedUrl } from './supabase'
 import type { IssueImage } from './types'
 
 export function imageAlt(img: IssueImage, index: number) {
   return img.alt.trim() || `Screenshot ${index + 1} (no description yet)`
 }
 
-/** Object URL for an in-memory blob, or for a stored issue image loaded from IndexedDB. */
-export function useIssueImageUrl(id: string, blob?: Blob) {
+/** Object URL for an in-memory blob, or a short-lived signed URL for an uploaded image. */
+export function useImageUrl(path: string, blob?: Blob) {
   const [url, setUrl] = useState<string | null>(null)
   useEffect(() => {
     let objectUrl: string | null = null
     let cancelled = false
-    const show = (b: Blob | null) => {
-      if (cancelled || !b) return
-      objectUrl = URL.createObjectURL(b)
+    setUrl(null)
+    if (blob) {
+      objectUrl = URL.createObjectURL(blob)
       setUrl(objectUrl)
+    } else if (path) {
+      void signedUrl(path).then(
+        (u) => !cancelled && setUrl(u),
+        () => undefined,
+      )
     }
-    if (blob) show(blob)
-    else void getIssueImage(id).then(show, () => undefined)
     return () => {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [id, blob])
+  }, [path, blob])
   return url
 }
 
@@ -42,6 +46,7 @@ export async function toIssueImage(file: File): Promise<{ meta: IssueImage; blob
   const ext = file.type.split('/')[1] || 'png'
   const meta: IssueImage = {
     id: crypto.randomUUID(),
+    path: '',
     name: file.name && file.name !== 'image.png' ? file.name : `pasted-screenshot.${ext}`,
     type: file.type,
     size: file.size,
