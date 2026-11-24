@@ -1,5 +1,5 @@
 import type { Workbook, Worksheet } from 'exceljs'
-import type { ExampleKind } from '../data/commonIssues'
+import { PRIORITIES, type ExampleKind } from '../data/commonIssues'
 import { getWcag } from '../data/wcag'
 import { computeMetrics, UNSET } from './metrics'
 import { imageAlt } from './issueImages'
@@ -339,16 +339,13 @@ function addSummarySheet(wb: Workbook, project: Project, pages: AuditPage[], iss
     sheet,
     r,
     'Issues by page',
-    ['Page', 'URL', 'Total', 'Open', 'Blocker', 'Critical', 'Major', 'Minor'],
+    ['Page', 'URL', 'Total', 'Open', ...PRIORITIES],
     m.byPage.map((p) => [
       p.page.name,
       p.page.url,
       p.total,
       p.open,
-      p.byPriority.Blocker ?? 0,
-      p.byPriority.Critical ?? 0,
-      p.byPriority.Major ?? 0,
-      p.byPriority.Minor ?? 0,
+      ...PRIORITIES.map((priority) => p.byPriority[priority] ?? 0),
     ]),
   )
 }

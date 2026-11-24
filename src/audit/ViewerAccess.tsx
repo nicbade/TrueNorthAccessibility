@@ -3,10 +3,12 @@ import { sendMagicLink } from './auth'
 import { addViewer, removeViewer, useAuditData } from './store'
 import type { Project } from './types'
 import { button, card, hint, input, label } from './ui/styles'
+import { useConfirm } from './ui/ConfirmDialog'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function ViewerAccess({ project }: { project: Project }) {
+  const [confirm, confirmDialog] = useConfirm()
   const id = useId()
   const { viewers } = useAuditData()
   const list = viewers.filter((v) => v.projectId === project.id)
@@ -53,7 +55,12 @@ export default function ViewerAccess({ project }: { project: Project }) {
   }
 
   const remove = async (viewerEmail: string) => {
-    if (!window.confirm(`Remove view access for ${viewerEmail}?`)) return
+    const ok = await confirm({
+      title: 'Remove viewer?',
+      message: `${viewerEmail} will no longer be able to see ${project.name}. You can invite them again later.`,
+      confirmLabel: 'Remove viewer',
+    })
+    if (!ok) return
     try {
       await removeViewer(project.id, viewerEmail)
       setMessage(`${viewerEmail} no longer has access to this project.`)
@@ -141,6 +148,7 @@ export default function ViewerAccess({ project }: { project: Project }) {
           </ul>
         )}
       </div>
+      {confirmDialog}
     </section>
   )
 }

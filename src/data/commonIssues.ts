@@ -2,7 +2,7 @@ import data from './commonIssues.json'
 import { getWcag } from './wcag'
 
 export type Platform = 'Desktop' | 'iOS' | 'Mobile'
-export type Priority = 'Blocker' | 'Critical' | 'Major' | 'Minor'
+export type Priority = 'Blocker' | 'Critical' | 'Major' | 'Minor' | 'UX / Content'
 export type ExampleKind = 'Internal' | 'External' | 'iOS' | 'Android'
 
 export type WorkingExample = {
@@ -31,7 +31,7 @@ export type CommonIssue = {
 }
 
 export const PLATFORMS: Platform[] = ['Desktop', 'iOS', 'Mobile']
-export const PRIORITIES: Priority[] = ['Blocker', 'Critical', 'Major', 'Minor']
+export const PRIORITIES: Priority[] = ['Blocker', 'Critical', 'Major', 'Minor', 'UX / Content']
 export const EXAMPLE_KINDS: ExampleKind[] = ['Internal', 'External', 'iOS', 'Android']
 
 export const COMMON_ISSUES = data as CommonIssue[]

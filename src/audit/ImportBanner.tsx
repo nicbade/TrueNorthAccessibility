@@ -3,8 +3,10 @@ import { archiveImportedAt, markArchiveImported, readBrowserArchive } from './br
 import { importBrowserData } from './importBrowserData'
 import { useAuditData } from './store'
 import { button } from './ui/styles'
+import { useConfirm } from './ui/ConfirmDialog'
 
 export default function ImportBanner() {
+  const [confirm, confirmDialog] = useConfirm()
   const { isOwner, userId } = useAuditData()
   const [archive] = useState(() => (archiveImportedAt() ? null : readBrowserArchive()))
   const [hidden, setHidden] = useState(false)
@@ -76,7 +78,14 @@ export default function ImportBanner() {
               type="button"
               className={button('secondary')}
               disabled={busy}
-              onClick={() => {
+              onClick={async () => {
+                const ok = await confirm({
+                  title: "Don't import?",
+                  message:
+                    'The import banner will not appear again in this browser. Your local copy stays in this browser, but it will not be uploaded.',
+                  confirmLabel: "Don't import",
+                })
+                if (!ok) return
                 markArchiveImported()
                 setHidden(true)
               }}
@@ -86,6 +95,7 @@ export default function ImportBanner() {
           </>
         )}
       </div>
+      {confirmDialog}
     </section>
   )
 }

@@ -149,6 +149,20 @@ Your local copy is kept. Choose **Don't import** to hide the banner.
 Viewer access is granted by **confirmed** email address, so someone cannot claim an invite by signing up with
 an email they don't control.
 
+What viewers can do:
+
+- **Comment** on issues and on pages. You see every comment and can delete any of them. Viewers can delete
+  only their own comments.
+- **Export to Excel**, which includes only the pages they can see.
+
+**Hiding a page:** on a page, click **Hide from clients**. Viewers can no longer see the page, its issues,
+screenshots or comments, and the page drops out of their metrics and exports. The database enforces this, not
+just the interface. You still see the page, marked **Hidden**. Your Excel export also leaves hidden pages out
+unless you tick **Include hidden pages in export**.
+
+Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
+the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.
+
 ## Local development and tests
 
 ```sh
@@ -158,6 +172,7 @@ VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_ANON_KEY=<publishable key
 SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<publishable key> \
   SUPABASE_SERVICE_ROLE_KEY=<secret key> node supabase/tests/policies.test.mjs
 node supabase/tests/sign-in-link-scanner.e2e.mjs   # app built against the local stack and served on :4173
+SUPABASE_ANON_KEY=<publishable key> SUPABASE_SECRET_KEY=<secret key> node supabase/tests/feedback-batch.e2e.mjs
 ```
 
 Local sign-in emails appear in Mailpit at `http://127.0.0.1:54324`. Local owner:

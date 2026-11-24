@@ -27,6 +27,8 @@ export const PRIORITY_STYLES: Record<string, string> = {
   Major:
     'bg-amber-100 text-amber-900 ring-amber-300 dark:bg-amber-950 dark:text-amber-100 dark:ring-amber-700',
   Minor: 'bg-sky-100 text-sky-900 ring-sky-300 dark:bg-sky-950 dark:text-sky-100 dark:ring-sky-700',
+  'UX / Content':
+    'bg-fuchsia-100 text-fuchsia-900 ring-fuchsia-300 dark:bg-fuchsia-950 dark:text-fuchsia-100 dark:ring-fuchsia-700',
 }
 
 export const PRIORITY_BAR: Record<string, string> = {
@@ -34,6 +36,7 @@ export const PRIORITY_BAR: Record<string, string> = {
   Critical: 'bg-orange-600 dark:bg-orange-400',
   Major: 'bg-amber-500 dark:bg-amber-300',
   Minor: 'bg-sky-600 dark:bg-sky-400',
+  'UX / Content': 'bg-fuchsia-600 dark:bg-fuchsia-400',
 }
 
 export const STATUS_STYLES: Record<string, string> = {

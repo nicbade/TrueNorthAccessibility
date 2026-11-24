@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PRIORITIES } from '../data/commonIssues'
 import { wcagLabel } from '../data/wcag'
 import { downloadProjectWorkbook } from './exportExcel'
 import { computeMetrics, UNSET } from './metrics'
@@ -8,18 +9,22 @@ import ViewerAccess from './ViewerAccess'
 import { hrefFor, navigate } from './router'
 import { createPage, deleteProject, updateProject, useAuditData } from './store'
 import type { Project } from './types'
+import Badge from './ui/Badge'
 import MetricTable from './ui/MetricTable'
 import { button, card, link, PRIORITY_BAR } from './ui/styles'
+import { useConfirm } from './ui/ConfirmDialog'
 
 type Props = { project: Project }
 
 export default function ProjectView({ project }: Props) {
+  const [confirm, confirmDialog] = useConfirm()
   const data = useAuditData()
   const { isOwner } = data
   const [editing, setEditing] = useState(false)
   const [addingPage, setAddingPage] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [status, setStatus] = useState('')
+  const [includeHidden, setIncludeHidden] = useState(false)
 
   const pages = useMemo(() => data.pages.filter((p) => p.projectId === project.id), [data.pages, project.id])
   const issues = useMemo(
@@ -27,12 +32,19 @@ export default function ProjectView({ project }: Props) {
     [data.issues, project.id],
   )
   const m = useMemo(() => computeMetrics(pages, issues), [pages, issues])
+  const hiddenPages = pages.filter((p) => p.hidden)
 
   const exportXlsx = async () => {
     setExporting(true)
     setStatus('Preparing Excel export…')
     try {
-      await downloadProjectWorkbook(project, pages, issues)
+      const exportPages = includeHidden ? pages : pages.filter((p) => !p.hidden)
+      const ids = new Set(exportPages.map((p) => p.id))
+      await downloadProjectWorkbook(
+        project,
+        exportPages,
+        issues.filter((i) => ids.has(i.pageId)),
+      )
       setStatus('Excel workbook downloaded.')
     } catch {
       setStatus('Export failed. Please try again.')
@@ -42,12 +54,13 @@ export default function ProjectView({ project }: Props) {
   }
 
   const remove = async () => {
-    if (
-      !window.confirm(
-        `Delete "${project.name}" and all of its pages, issues and screenshots? This cannot be undone.`,
-      )
-    )
-      return
+    const ok = await confirm({
+      title: 'Delete project?',
+      message: `"${project.name}" and all of its pages, issues, screenshots and comments will be deleted.`,
+      confirmLabel: 'Delete project',
+      detail: 'This cannot be undone.',
+    })
+    if (!ok) return
     try {
       await deleteProject(project.id)
       navigate(hrefFor.projects())
@@ -108,6 +121,17 @@ export default function ProjectView({ project }: Props) {
             </svg>
             {exporting ? 'Exporting…' : 'Export to Excel'}
           </button>
+          {isOwner && hiddenPages.length > 0 && (
+            <label className="inline-flex items-center gap-2 self-center text-[0.8125rem]">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-forest-btn"
+                checked={includeHidden}
+                onChange={(e) => setIncludeHidden(e.target.checked)}
+              />
+              Include hidden pages in export
+            </label>
+          )}
           {isOwner && (
             <>
               <button type="button" className={button('secondary')} onClick={() => setEditing(true)}>
@@ -128,6 +152,12 @@ export default function ProjectView({ project }: Props) {
         <h2 id="metrics-heading" className="m-0 mb-3 font-serif text-xl">
           Metrics
         </h2>
+        {isOwner && hiddenPages.length > 0 && (
+          <p className="m-0 -mt-1 mb-3 text-[0.8125rem] text-slate">
+            Includes {hiddenPages.length} hidden page{hiddenPages.length === 1 ? '' : 's'} that clients can't
+            see. Clients' metrics leave them out.
+          </p>
+        )}
         <dl className="m-0 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {stats.map(([label, value, tone]) => (
             <div key={label} className={`${card} px-4 py-3`}>
@@ -212,18 +242,11 @@ export default function ProjectView({ project }: Props) {
                   <th scope="col" className="px-3 py-2 text-right font-semibold">
                     Open
                   </th>
-                  <th scope="col" className="px-3 py-2 text-right font-semibold">
-                    Blocker
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-semibold">
-                    Critical
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-semibold">
-                    Major
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-semibold">
-                    Minor
-                  </th>
+                  {PRIORITIES.map((p) => (
+                    <th key={p} scope="col" className="px-3 py-2 text-right font-semibold">
+                      {p}
+                    </th>
+                  ))}
                   <th scope="col" className="px-4 py-2 font-semibold">
                     Screenshot
                   </th>
@@ -236,13 +259,19 @@ export default function ProjectView({ project }: Props) {
                       <a href={hrefFor.page(project.id, page.id)} className={`font-semibold ${link}`}>
                         {page.name}
                       </a>
+                      {page.hidden && (
+                        <span className="ml-2">
+                          <Badge kind="neutral" value="Hidden" />
+                          <span className="sr-only"> from clients</span>
+                        </span>
+                      )}
                       {page.url && (
                         <span className="block break-all text-[0.75rem] text-slate">{page.url}</span>
                       )}
                     </th>
                     <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{total}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{open}</td>
-                    {(['Blocker', 'Critical', 'Major', 'Minor'] as const).map((p) => (
+                    {PRIORITIES.map((p) => (
                       <td key={p} className="px-3 py-2.5 text-right tabular-nums">
                         {byPriority[p] ?? 0}
                       </td>
@@ -278,6 +307,7 @@ export default function ProjectView({ project }: Props) {
           }}
         />
       )}
+      {confirmDialog}
     </>
   )
 }

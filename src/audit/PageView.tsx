@@ -1,6 +1,8 @@
 import { useId, useMemo, useState } from 'react'
 import { PRIORITIES } from '../data/commonIssues'
 import { getWcag } from '../data/wcag'
+import Comments from './Comments'
+import CopyIssueDialog from './CopyIssueDialog'
 import IssueForm from './IssueForm'
 import IssueImageGallery from './IssueImageGallery'
 import PageForm from './PageForm'
@@ -10,12 +12,22 @@ import { deleteIssue, deletePage, saveIssue, updateIssueStatus, updatePage, useA
 import { STATUSES, type AuditPage, type Issue, type IssueStatus, type Project } from './types'
 import Badge from './ui/Badge'
 import { button, card, input, label, link } from './ui/styles'
+import { useConfirm } from './ui/ConfirmDialog'
 
 type Props = { project: Project; page: AuditPage }
 
-const PRIORITY_RANK: Record<string, number> = { Blocker: 0, Critical: 1, Major: 2, Minor: 3 }
+const PRIORITY_RANK: Record<string, number> = {
+  Blocker: 0,
+  Critical: 1,
+  Major: 2,
+  Minor: 3,
+  'UX / Content': 4,
+}
+
+type Sort = 'number' | 'priority' | 'newest'
 
 export default function PageView({ project, page }: Props) {
+  const [confirm, confirmDialog] = useConfirm()
   const data = useAuditData()
   const id = useId()
   const { isOwner } = data
@@ -23,7 +35,9 @@ export default function PageView({ project, page }: Props) {
   const [issueForm, setIssueForm] = useState<{ issue?: Issue } | null>(null)
   const [statusFilter, setStatusFilter] = useState<'All' | IssueStatus>('All')
   const [priorityFilter, setPriorityFilter] = useState('All')
-  const [sort, setSort] = useState<'number' | 'priority'>('number')
+  const [sort, setSort] = useState<Sort>('number')
+  const [copying, setCopying] = useState(false)
+  const [togglingHidden, setTogglingHidden] = useState(false)
   const [announcement, setAnnouncement] = useState('')
 
   const issues = useMemo(() => data.issues.filter((i) => i.pageId === page.id), [data.issues, page.id])
@@ -35,14 +49,21 @@ export default function PageView({ project, page }: Props) {
         .sort((a, b) =>
           sort === 'priority'
             ? (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9) || a.number - b.number
-            : a.number - b.number,
+            : sort === 'newest'
+              ? b.createdAt.localeCompare(a.createdAt) || b.number - a.number
+              : a.number - b.number,
         ),
     [issues, statusFilter, priorityFilter, sort],
   )
 
   const removePage = async () => {
-    if (!window.confirm(`Delete page "${page.name}" with its ${issues.length} issue(s) and screenshot?`))
-      return
+    const ok = await confirm({
+      title: 'Delete page?',
+      message: `"${page.name}" and its ${issues.length} issue${issues.length === 1 ? '' : 's'}, screenshots and comments will be deleted.`,
+      confirmLabel: 'Delete page',
+      detail: 'This cannot be undone.',
+    })
+    if (!ok) return
     try {
       await deletePage(page.id)
       navigate(hrefFor.project(project.id))
@@ -51,14 +72,27 @@ export default function PageView({ project, page }: Props) {
     }
   }
 
+  const toggleHidden = async () => {
+    setTogglingHidden(true)
+    try {
+      await updatePage(page.id, { hidden: !page.hidden })
+      setAnnouncement(page.hidden ? 'Page is now visible to clients.' : 'Page is now hidden from clients.')
+    } catch (e) {
+      setAnnouncement(e instanceof Error ? e.message : 'Could not change page visibility.')
+    } finally {
+      setTogglingHidden(false)
+    }
+  }
+
   const removeIssue = async (issue: Issue) => {
     const shots = issue.images.length
-    if (
-      !window.confirm(
-        `Delete issue #${issue.number}${shots ? ` and its ${shots} screenshot${shots === 1 ? '' : 's'}` : ''}?`,
-      )
-    )
-      return
+    const ok = await confirm({
+      title: `Delete issue #${issue.number}?`,
+      message: `Issue #${issue.number}${shots ? `, its ${shots} screenshot${shots === 1 ? '' : 's'}` : ''} and its comments will be deleted.`,
+      confirmLabel: 'Delete issue',
+      detail: 'This cannot be undone.',
+    })
+    if (!ok) return
     try {
       await deleteIssue(issue.id)
       setAnnouncement(`Issue #${issue.number} deleted.`)
@@ -84,11 +118,25 @@ export default function PageView({ project, page }: Props) {
             </p>
           )}
           {page.notes && <p className="m-0 mt-1 text-[0.8125rem] text-slate">{page.notes}</p>}
+          {isOwner && page.hidden && (
+            <p className="m-0 mt-2 inline-flex items-center gap-2 rounded-md border border-slate bg-surface px-2.5 py-1 text-[0.8125rem]">
+              <Badge kind="neutral" value="Hidden" />
+              Clients can't see this page, its issues or its screenshots.
+            </p>
+          )}
         </div>
         {isOwner && (
           <div className="flex flex-wrap gap-2">
             <button type="button" className={button('secondary')} onClick={() => setEditingPage(true)}>
               Edit page
+            </button>
+            <button
+              type="button"
+              className={button('secondary')}
+              disabled={togglingHidden}
+              onClick={() => void toggleHidden()}
+            >
+              {page.hidden ? 'Show to clients' : 'Hide from clients'}
             </button>
             <button type="button" className={button('danger')} onClick={() => void removePage()}>
               Delete page
@@ -109,14 +157,19 @@ export default function PageView({ project, page }: Props) {
               Issues <span className="text-slate">({issues.length})</span>
             </h2>
             {isOwner && (
-              <button
-                id={`${id}-add`}
-                type="button"
-                className={button('primary')}
-                onClick={() => setIssueForm({})}
-              >
-                <span aria-hidden="true">+</span> Add issue
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={button('secondary')} onClick={() => setCopying(true)}>
+                  Copy existing issue
+                </button>
+                <button
+                  id={`${id}-add`}
+                  type="button"
+                  className={button('primary')}
+                  onClick={() => setIssueForm({})}
+                >
+                  <span aria-hidden="true">+</span> Add issue
+                </button>
+              </div>
             )}
           </div>
 
@@ -163,10 +216,11 @@ export default function PageView({ project, page }: Props) {
                   id={`${id}-sort`}
                   className={input}
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as 'number' | 'priority')}
+                  onChange={(e) => setSort(e.target.value as Sort)}
                 >
                   <option value="number">Issue number</option>
                   <option value="priority">Priority</option>
+                  <option value="newest">Newest first</option>
                 </select>
               </div>
             </div>
@@ -240,6 +294,7 @@ export default function PageView({ project, page }: Props) {
                           )}
                         </details>
                       )}
+                      <Comments page={page} issue={issue} />
                       {isOwner && (
                         <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-divider pt-3">
                           <div className="flex items-center gap-2">
@@ -296,6 +351,18 @@ export default function PageView({ project, page }: Props) {
         </section>
       </div>
 
+      <Comments page={page} />
+
+      {copying && (
+        <CopyIssueDialog
+          page={page}
+          onClose={() => setCopying(false)}
+          onCopied={(copy, source) => {
+            setCopying(false)
+            setAnnouncement(`Issue #${source.number} copied to this page as issue #${copy.number}.`)
+          }}
+        />
+      )}
       {editingPage && (
         <PageForm
           page={page}
@@ -321,6 +388,7 @@ export default function PageView({ project, page }: Props) {
           }}
         />
       )}
+      {confirmDialog}
     </>
   )
 }
