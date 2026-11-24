@@ -46,7 +46,15 @@ Project **truenorth-audit-hub**, US region, RLS enabled.
 5. After SMTP is set up, open **Authentication → Email Templates**. For both **Magic Link** and
    **Confirm signup**, set the message body to the contents of `supabase/templates/magic_link.html`. Its link
    has the form `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`, which works in any browser or
-   device, including an invited viewer's.
+   device, including an invited viewer's. The email also shows the 6-digit code (`{{ .Token }}`).
+   Set the subject of both to `Your TrueNorth Audit Hub sign-in link`.
+
+   **Work email addresses:** many company mail systems have a security scanner that opens every link
+   seconds after the email arrives. For that reason, opening the link only shows a **Continue signing in**
+   button, and the one-time token is used only when the button is pressed. If someone's mail system also
+   presses buttons, they can instead type the 6-digit code on the "Check your email" screen without opening
+   the link. In **Logs → Auth**, a scanner shows up as a `/verify` request from an IP address the person
+   doesn't recognize, a few seconds after the email was sent and before their own click.
 
 **Until step 5 is done**, the project uses the default template (`{{ .ConfirmationURL }}`). Audit Hub handles
 that link too, but it only completes sign-in **in the browser that requested it**. In practice:
@@ -149,6 +157,7 @@ npx supabase status           # prints the API URL and keys
 VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_ANON_KEY=<publishable key> pnpm dev
 SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<publishable key> \
   SUPABASE_SERVICE_ROLE_KEY=<secret key> node supabase/tests/policies.test.mjs
+node supabase/tests/sign-in-link-scanner.e2e.mjs   # app built against the local stack and served on :4173
 ```
 
 Local sign-in emails appear in Mailpit at `http://127.0.0.1:54324`. Local owner:
