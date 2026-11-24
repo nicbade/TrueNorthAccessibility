@@ -29,6 +29,17 @@ export type ScreenshotMeta = {
   updatedAt: string
 }
 
+export type IssueImage = {
+  id: string
+  name: string
+  type: string
+  size: number
+  width: number
+  height: number
+  alt: string
+  createdAt: string
+}
+
 export type AuditPage = {
   id: string
   projectId: string
@@ -57,6 +68,7 @@ export type Issue = {
   status: IssueStatus
   location: string
   commonIssueId: string | null
+  images: IssueImage[]
   createdAt: string
   updatedAt: string
 }

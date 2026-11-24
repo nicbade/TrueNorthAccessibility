@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ClipboardEvent, type ReactNode } from 'react'
 
 type Props = {
   title: string
@@ -7,10 +7,19 @@ type Props = {
   children: ReactNode
   footer?: ReactNode
   size?: 'md' | 'lg'
+  onPaste?: (e: ClipboardEvent<HTMLDialogElement>) => void
 }
 
 /** Native modal dialog: provides focus containment, Escape to close and inert background. */
-export default function Dialog({ title, description, onClose, children, footer, size = 'md' }: Props) {
+export default function Dialog({
+  title,
+  description,
+  onClose,
+  children,
+  footer,
+  size = 'md',
+  onPaste,
+}: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const descId = useId()
@@ -29,6 +38,7 @@ export default function Dialog({ title, description, onClose, children, footer, 
   return (
     <dialog
       ref={ref}
+      onPaste={onPaste}
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={(e) => {
