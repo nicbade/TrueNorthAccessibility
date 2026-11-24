@@ -41,13 +41,57 @@ Project **truenorth-audit-hub**, US region, RLS enabled.
 1. Open **Authentication → URL Configuration**.
 2. Set **Site URL** to `https://truenorth-accessibility.com/audit-hub`.
 3. Under **Redirect URLs**, add `https://truenorth-accessibility.com/audit-hub`.
-4. Open **Authentication → Email Templates**. For both **Magic Link** and **Confirm signup**, set the
-   message body to the contents of `supabase/templates/magic_link.html`. Its link has the form
-   `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`, which lets the link work in any browser or
-   device, including an invited viewer's. The default template's link only works in the browser that
-   requested it. The GitHub integration may push these settings from `config.toml` for you; check them anyway.
-5. Recommended: under **Authentication → Emails → SMTP Settings**, add your own SMTP provider. Supabase's
-   built-in email sender is limited to a few emails per hour, which is fine for testing but not for invites.
+4. Set up custom SMTP (section 3a below). **Supabase's hosted dashboard does not let you edit email templates
+   until custom SMTP is configured**, and the built-in sender only allows a few emails per hour.
+5. After SMTP is set up, open **Authentication → Email Templates**. For both **Magic Link** and
+   **Confirm signup**, set the message body to the contents of `supabase/templates/magic_link.html`. Its link
+   has the form `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`, which works in any browser or
+   device, including an invited viewer's.
+
+**Until step 5 is done**, the project uses the default template (`{{ .ConfirmationURL }}`). Audit Hub handles
+that link too, but it only completes sign-in **in the browser that requested it**. In practice:
+
+- Request your own sign-in link on `/audit-hub` and open it in the same browser. On a phone, request the link
+  on the phone.
+- Invite emails sent from **Viewer access** will not sign the viewer in, because your browser requested them.
+  Add the viewer, then tell them to go to `https://truenorth-accessibility.com/audit-hub` and request their own
+  link with that email.
+
+### 3a. Custom SMTP with Gmail
+
+Audit Hub sends very little email, so a Gmail account is enough. Gmail allows about 500 messages a day.
+
+1. Turn on **2-Step Verification** for the Gmail account at
+   [myaccount.google.com/security](https://myaccount.google.com/security). Google requires it for App Passwords.
+2. Create an App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+   Name it `Supabase Audit Hub` and copy the 16-character password. Google shows it once. It goes only into
+   Supabase, never into GitHub or the site. Your normal Gmail password will not work here.
+3. In Supabase, open **Authentication → Emails → SMTP Settings**, turn on **Enable custom SMTP**, and enter:
+   - **Sender email**: your full Gmail address, the same one used as the username. Gmail rewrites other
+     sender addresses.
+   - **Sender name**: `TrueNorth Audit Hub`
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `465`
+   - **Username**: your full Gmail address
+   - **Password**: the App Password, entered without spaces
+
+   Click **Save**.
+4. Open **Authentication → Rate Limits** and set **Rate limit for sending emails** to fit your use, for example
+   30 an hour. This stays well under Gmail's daily limit.
+5. Request a sign-in link on `/audit-hub` and confirm that it arrives from your Gmail address with the name
+   "TrueNorth Audit Hub". If it doesn't arrive, check the recipient's spam folder.
+6. Do step 5 above (email templates).
+
+If you change your Google password, Google revokes App Passwords. Create a new one and update Supabase.
+
+**Alternative: Resend.** If you later want email to come from `@truenorth-accessibility.com`, create a free
+[Resend](https://resend.com) account and verify the domain under **Domains** by adding the DNS records it shows.
+Then create a sending-only API key and enter these in the same Supabase SMTP settings:
+- **Host**: `smtp.resend.com`
+- **Port**: `465`
+- **Username**: `resend`
+- **Password**: the API key
+- **Sender email**: an address on that domain, for example `audit-hub@truenorth-accessibility.com`
 
 ## 4. Add the GitHub secrets (done)
 
@@ -88,7 +132,9 @@ Your local copy is kept. Choose **Don't import** to hide the banner.
 
 1. Open a project and scroll to **Viewer access**.
 2. Enter the viewer's email. Leave **Email them a sign-in link** checked, and click **Invite viewer**.
-3. The viewer opens the link (or later goes to `/audit-hub` and requests their own link with that email).
+   Until the custom email template from step 3 is in place, this emailed link won't sign them in (see step 3),
+   so tell them to request their own link instead.
+3. The viewer opens the link (or goes to `/audit-hub` and requests their own link with that email).
    They see only the projects shared with them, with no edit controls.
 4. Click **Remove** next to their email to revoke access immediately.
 
