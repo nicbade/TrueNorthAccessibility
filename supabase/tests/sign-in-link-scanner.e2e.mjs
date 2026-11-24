@@ -3,13 +3,17 @@
 //   VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_ANON_KEY=<publishable key> pnpm build
 //   mkdir -p dist/audit-hub && cp dist/index.html dist/audit-hub/ && pnpm preview --port 4173
 // and Playwright: `npm i --no-save playwright @axe-core/playwright && npx playwright install chromium`.
-// Run: node supabase/tests/sign-in-link-scanner.e2e.mjs
+// Run: SUPABASE_SERVICE_ROLE_KEY=... node supabase/tests/sign-in-link-scanner.e2e.mjs
+// (Sign-ups are invite-only, so the test creates each account with the admin API first.)
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
 
 const BASE = process.env.HUB_URL ?? 'http://127.0.0.1:4173'
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 const SCREENSHOT = process.env.SCREENSHOT_PATH
+const API = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!SERVICE_KEY) throw new Error('Set SUPABASE_SERVICE_ROLE_KEY')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 let failures = 0
 let violations = 0
@@ -40,6 +44,12 @@ async function mail(email) {
 const browser = await chromium.launch()
 const size = { width: 1280, height: 800 }
 async function requestLink(email) {
+  const res = await fetch(`${API}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, email_confirm: true }),
+  })
+  if (!res.ok) throw new Error(`could not create ${email}: ${res.status}`)
   await fetch(`${MAILPIT}/api/v1/messages`, { method: 'DELETE' })
   const ctx = await browser.newContext({ viewport: size })
   const page = await ctx.newPage()

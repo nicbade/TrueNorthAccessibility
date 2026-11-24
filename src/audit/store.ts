@@ -1,5 +1,13 @@
 import { useSyncExternalStore } from 'react'
-import { copyObject, db, extensionFor, removeObjects, uploadObject } from './supabase'
+import {
+  authRedirectUrl,
+  copyObject,
+  db,
+  extensionFor,
+  removeObjects,
+  supabase,
+  uploadObject,
+} from './supabase'
 import type {
   AuditData,
   AuditPage,
@@ -238,18 +246,34 @@ export async function deleteProject(id: string) {
 
 // ─── Viewers ───────────────────────────────────────────────────────────────
 
-export async function addViewer(projectId: string, email: string): Promise<ProjectViewer> {
-  const row = check(
-    await db()
-      .from('project_viewers')
-      .insert({ project_id: projectId, email: email.trim() })
-      .select()
-      .single(),
+async function manageViewer<T>(body: Record<string, unknown>, action: string): Promise<T> {
+  const { data, error } = await supabase!.functions.invoke('manage-viewer', { body })
+  if (error) {
+    const detail = await (error.context as Response | undefined)?.json?.().catch(() => null)
+    throw new SaveError(`Could not ${action}: ${detail?.error ?? error.message}`)
+  }
+  return data as T
+}
+
+/** Grants access through the manage-viewer function, which also creates the viewer's account. */
+export async function addViewer(projectId: string, email: string, sendLink: boolean) {
+  const result = await manageViewer<{ viewer: Row; created: boolean; emailed: boolean }>(
+    { action: 'invite', projectId, email: email.trim(), sendLink, redirectTo: authRedirectUrl() },
     'add the viewer',
   )
-  const viewer = toViewer(row)
-  commit({ viewers: [...state.viewers, viewer] })
-  return viewer
+  const viewer: ProjectViewer = toViewer(result.viewer)
+  commit({
+    viewers: [
+      ...state.viewers.filter((v) => !(v.projectId === projectId && v.email === viewer.email)),
+      viewer,
+    ],
+  })
+  return { viewer, created: result.created, emailed: result.emailed }
+}
+
+/** Deletes the person's account. Only allowed once they view no projects. */
+export async function revokeAccount(email: string) {
+  return manageViewer<{ deleted: boolean }>({ action: 'revoke', email }, 'revoke their sign-in')
 }
 
 export async function removeViewer(projectId: string, email: string) {

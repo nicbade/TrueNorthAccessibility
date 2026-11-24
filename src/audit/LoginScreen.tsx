@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import {
   continueSignIn,
   dismissPendingLink,
+  RateLimitError,
   sendMagicLink,
   signInWithPassword,
   useAuth,
@@ -99,9 +100,9 @@ function SignInForm() {
       setError(
         mode === 'password'
           ? 'That email and password did not match. Try again or use a sign-in link.'
-          : err instanceof Error
-            ? `Could not send the sign-in link: ${err.message}`
-            : 'Could not send the sign-in link.',
+          : err instanceof RateLimitError
+            ? err.message
+            : 'Could not send the sign-in link. Check your connection and try again.',
       )
     } finally {
       setBusy(false)
@@ -134,7 +135,7 @@ function SignInForm() {
         Sign in to Audit Hub
       </h1>
       <p className="m-0 mt-2 text-[0.875rem] text-slate">
-        Audit projects are private. Sign in with the email address you were invited with.
+        Audit Hub is invitation only. Sign in with the email address you were invited with.
       </p>
 
       <div className={`${card} mt-6 p-6`}>
@@ -143,8 +144,8 @@ function SignInForm() {
             <div role="status" aria-live="polite">
               <h2 className="m-0 font-serif text-xl">Check your email</h2>
               <p className="m-0 mt-2 text-sm">
-                We sent a sign-in link and a 6-digit code to <strong className="break-all">{sentTo}</strong>.
-                Open the link, or type the code here.
+                If <strong className="break-all">{sentTo}</strong> has been invited to Audit Hub, we sent it a
+                sign-in link and a 6-digit code. Open the link, or type the code here.
               </p>
             </div>
             <form onSubmit={(e) => void submitCode(e)} noValidate className="mt-4 grid gap-3">
@@ -179,9 +180,13 @@ function SignInForm() {
                 {codeBusy ? 'Signing in…' : 'Sign in with code'}
               </button>
             </form>
+            <p className="m-0 mt-4 text-[0.8125rem] text-slate">
+              Nothing after a few minutes? Check your spam folder, or ask the person who invited you to
+              confirm the address they used.
+            </p>
             <button
               type="button"
-              className={button('secondary', 'mt-4')}
+              className={button('secondary', 'mt-3')}
               onClick={() => {
                 setSentTo('')
                 setCode('')
