@@ -61,3 +61,8 @@ export async function removeObjects(paths: string[]) {
   signed.forEach((_, key) => list.includes(key) && signed.delete(key))
   await db().storage.from(BUCKET).remove(list)
 }
+
+export async function copyObject(from: string, to: string) {
+  const { error } = await db().storage.from(BUCKET).copy(from, to)
+  if (error) throw error
+}

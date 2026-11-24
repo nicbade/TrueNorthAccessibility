@@ -106,6 +106,65 @@ check(!!(await viewer.storage.from(BUCKET).upload(`${projA.id}/issues/x.png`, pn
 await viewer.storage.from(BUCKET).remove([pathA])
 check(!(await owner.storage.from(BUCKET).download(pathA)).error, 'viewer cannot delete screenshots')
 
+// ─── "UX / Content" severity ───
+check(!(await owner.from('issues').update({ priority: 'UX / Content' }).eq('id', issueA.id)).error, 'owner can set the UX / Content severity')
+check(!!(await owner.from('issues').update({ priority: 'Cosmetic' }).eq('id', issueA.id)).error, 'unknown severities are rejected')
+
+// ─── Hidden pages ───
+const { data: pageH } = await owner.from('pages').insert({ project_id: projA.id, name: 'Draft', hidden: true }).select().single()
+const { data: issueH } = await owner
+  .from('issues')
+  .insert({ project_id: projA.id, page_id: pageH.id, number: 2, description: 'Hidden finding' })
+  .select()
+  .single()
+const pathH = `${projA.id}/issues/${issueH.id}/${crypto.randomUUID()}.png`
+const pathHP = `${projA.id}/pages/${pageH.id}/screenshot.png`
+await owner.storage.from(BUCKET).upload(pathH, png)
+await owner.storage.from(BUCKET).upload(pathHP, png)
+await owner.from('issue_images').insert({ issue_id: issueH.id, project_id: projA.id, storage_path: pathH })
+check((await owner.from('pages').select('id').eq('project_id', projA.id)).data?.length === 2, 'owner sees hidden pages')
+check((await viewer.from('pages').select('id').eq('id', pageH.id)).data?.length === 0, 'viewer cannot see a hidden page')
+check((await viewer.from('issues').select('id').eq('id', issueH.id)).data?.length === 0, 'viewer cannot see issues on a hidden page')
+check((await viewer.from('issue_images').select('id').eq('issue_id', issueH.id)).data?.length === 0, 'viewer cannot see image metadata on a hidden page')
+check(!!(await viewer.storage.from(BUCKET).download(pathH)).error, 'viewer cannot download issue screenshots on a hidden page')
+check(!!(await viewer.storage.from(BUCKET).download(pathHP)).error, 'viewer cannot download a hidden page screenshot')
+await viewer.from('pages').update({ hidden: false }).eq('id', pageH.id)
+check((await owner.from('pages').select('hidden').eq('id', pageH.id).single()).data.hidden === true, 'viewer cannot unhide a page')
+await owner.from('pages').update({ hidden: false }).eq('id', pageH.id)
+check((await viewer.from('issues').select('id').eq('id', issueH.id)).data?.length === 1, 'unhiding a page shows its issues to viewers')
+check(!(await viewer.storage.from(BUCKET).download(pathH)).error, 'unhiding a page restores screenshot access')
+await owner.from('pages').update({ hidden: true }).eq('id', pageH.id)
+
+// ─── Comments ───
+const comment = (client, email, fields) =>
+  client.from('comments').insert({ project_id: projA.id, page_id: pageA.id, author_email: email, ...fields }).select().single()
+const viewerId = (await viewer.auth.getUser()).data.user.id
+const vc = await comment(viewer, emails.viewer, { issue_id: issueA.id, author_id: viewerId, body: 'Can you clarify?' })
+check(!vc.error, 'viewer can comment on an issue')
+check(!(await comment(viewer, emails.viewer, { author_id: viewerId, body: 'Page note' })).error, 'viewer can comment on a page')
+check(!!(await comment(viewer, emails.owner, { author_id: viewerId, body: 'Spoofed' })).error, 'viewer cannot comment as someone else')
+check(
+  !!(await viewer.from('comments').insert({ project_id: projA.id, page_id: pageH.id, issue_id: issueH.id, author_id: viewerId, author_email: emails.viewer, body: 'x' })).error,
+  'viewer cannot comment on a hidden page',
+)
+check(
+  !!(await viewer.from('comments').insert({ project_id: projB.id, page_id: pageB.id, author_id: viewerId, author_email: emails.viewer, body: 'x' })).error,
+  'viewer cannot comment on another project',
+)
+check(!!(await comment(viewer, emails.viewer, { issue_id: issueH.id, author_id: viewerId, body: 'x' })).error, 'a comment cannot point at an issue on a different page')
+const ownerId = (await owner.auth.getUser()).data.user.id
+const oc = await comment(owner, emails.owner, { issue_id: issueA.id, author_id: ownerId, body: 'Sure, see the fix.' })
+check(!oc.error, 'owner can comment')
+check((await owner.from('comments').select('id')).data?.length === 3, 'owner sees all comments')
+check((await viewer.from('comments').select('id')).data?.length === 3, 'viewer sees comments on visible pages')
+check((await stranger.from('comments').select('id')).data?.length === 0, 'stranger sees no comments')
+await viewer.from('comments').delete().eq('id', oc.data.id)
+check((await owner.from('comments').select('id').eq('id', oc.data.id)).data?.length === 1, "viewer cannot delete someone else's comment")
+await viewer.from('comments').update({ body: 'edited' }).eq('id', vc.data.id)
+check((await owner.from('comments').select('body').eq('id', vc.data.id).single()).data.body === 'Can you clarify?', 'comments cannot be edited')
+await owner.from('comments').delete().eq('id', vc.data.id)
+check((await owner.from('comments').select('id').eq('id', vc.data.id)).data?.length === 0, "owner can delete a viewer's comment")
+
 // ─── Stranger and anonymous: nothing ───
 check((await stranger.from('projects').select('id')).data?.length === 0, 'signed-in stranger sees no projects')
 check((await stranger.from('issues').select('id')).data?.length === 0, 'signed-in stranger sees no issues')
@@ -130,7 +189,7 @@ check((await viewer.from('projects').select('id')).data?.length === 0, 'removed 
 check(!!(await viewer.storage.from(BUCKET).download(pathA)).error, 'removed viewer loses screenshot access')
 await owner.from('projects').delete().eq('id', projA.id)
 check((await owner.from('issue_images').select('id').eq('project_id', projA.id)).data.length === 0, 'deleting a project cascades to issues and images')
-await owner.storage.from(BUCKET).remove([pathA, pathB])
+await owner.storage.from(BUCKET).remove([pathA, pathB, pathH, pathHP])
 await owner.from('projects').delete().eq('id', projB.id)
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nAll policy checks passed')

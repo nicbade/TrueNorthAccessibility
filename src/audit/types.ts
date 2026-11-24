@@ -49,6 +49,8 @@ export type AuditPage = {
   name: string
   url: string
   notes: string
+  /** Hidden pages (and their issues) are visible to the owner only. */
+  hidden: boolean
   screenshot: ScreenshotMeta | null
   createdAt: string
   updatedAt: string
@@ -84,9 +86,22 @@ export type ProjectViewer = {
   createdAt: string
 }
 
+export type Comment = {
+  id: string
+  projectId: string
+  pageId: string
+  /** null for a comment on the page itself */
+  issueId: string | null
+  authorId: string | null
+  authorEmail: string
+  body: string
+  createdAt: string
+}
+
 export type AuditData = {
   projects: Project[]
   pages: AuditPage[]
   issues: Issue[]
   viewers: ProjectViewer[]
+  comments: Comment[]
 }

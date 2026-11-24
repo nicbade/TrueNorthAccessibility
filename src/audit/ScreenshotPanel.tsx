@@ -4,6 +4,7 @@ import { removePageScreenshot, setPageScreenshot, useAuditData } from './store'
 import { signedUrl } from './supabase'
 import type { AuditPage } from './types'
 import { button, card } from './ui/styles'
+import { useConfirm } from './ui/ConfirmDialog'
 
 type Props = { page: AuditPage }
 
@@ -12,6 +13,7 @@ function formatBytes(n: number) {
 }
 
 export default function ScreenshotPanel({ page }: Props) {
+  const [confirm, confirmDialog] = useConfirm()
   const id = useId()
   const { isOwner } = useAuditData()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -62,7 +64,13 @@ export default function ScreenshotPanel({ page }: Props) {
   }
 
   const remove = async () => {
-    if (!window.confirm('Remove this screenshot?')) return
+    const ok = await confirm({
+      title: 'Remove screenshot?',
+      message: `The screenshot of ${page.name} will be deleted.`,
+      confirmLabel: 'Remove screenshot',
+      detail: 'This cannot be undone.',
+    })
+    if (!ok) return
     try {
       await removePageScreenshot(page)
       setMessage('Screenshot removed.')
@@ -191,6 +199,7 @@ export default function ScreenshotPanel({ page }: Props) {
           </p>
         </div>
       )}
+      {confirmDialog}
     </section>
   )
 }

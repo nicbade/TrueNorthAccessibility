@@ -1,6 +1,15 @@
 import { useSyncExternalStore } from 'react'
-import { db, extensionFor, removeObjects, uploadObject } from './supabase'
-import type { AuditData, AuditPage, Issue, IssueDraft, IssueImage, Project, ProjectViewer } from './types'
+import { copyObject, db, extensionFor, removeObjects, uploadObject } from './supabase'
+import type {
+  AuditData,
+  AuditPage,
+  Comment,
+  Issue,
+  IssueDraft,
+  IssueImage,
+  Project,
+  ProjectViewer,
+} from './types'
 
 export type HubState = AuditData & {
   status: 'idle' | 'loading' | 'ready' | 'error'
@@ -18,6 +27,7 @@ const EMPTY: HubState = {
   pages: [],
   issues: [],
   viewers: [],
+  comments: [],
 }
 
 let state: HubState = EMPTY
@@ -80,6 +90,7 @@ const toPage = (r: Row): AuditPage => ({
   name: r.name,
   url: r.url,
   notes: r.notes,
+  hidden: Boolean(r.hidden),
   screenshot: r.screenshot ?? null,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
@@ -132,6 +143,17 @@ export const fromIssueDraft = (d: Omit<IssueDraft, 'images'>) => ({
   common_issue_id: d.commonIssueId,
 })
 
+const toComment = (r: Row): Comment => ({
+  id: r.id,
+  projectId: r.project_id,
+  pageId: r.page_id,
+  issueId: r.issue_id,
+  authorId: r.author_id,
+  authorEmail: r.author_email,
+  body: r.body,
+  createdAt: r.created_at,
+})
+
 const toViewer = (r: Row): ProjectViewer => ({
   projectId: r.project_id,
   email: r.email,
@@ -145,13 +167,14 @@ export async function loadHubData(userId: string) {
   if (state.userId !== userId || state.status !== 'ready') commit({ ...EMPTY, status: 'loading', userId })
   try {
     const client = db()
-    const [owners, projects, pages, issues, images, viewers] = await Promise.all([
+    const [owners, projects, pages, issues, images, viewers, comments] = await Promise.all([
       client.from('app_owners').select('user_id').eq('user_id', userId),
       client.from('projects').select('*').order('updated_at', { ascending: false }),
       client.from('pages').select('*').order('created_at'),
       client.from('issues').select('*').order('number'),
       client.from('issue_images').select('*').order('position'),
       client.from('project_viewers').select('*').order('created_at'),
+      client.from('comments').select('*').order('created_at'),
     ])
     const imageRows = check(images, 'load issue images') ?? []
     const byIssue = new Map<string, IssueImage[]>()
@@ -163,6 +186,7 @@ export async function loadHubData(userId: string) {
       pages: (check(pages, 'load pages') ?? []).map(toPage),
       issues: (check(issues, 'load issues') ?? []).map((r: Row) => toIssue(r, byIssue.get(r.id) ?? [])),
       viewers: (check(viewers, 'load viewers') ?? []).map(toViewer),
+      comments: (check(comments, 'load comments') ?? []).map(toComment),
     })
   } catch (e) {
     commit({ status: 'error', error: e instanceof Error ? e.message : 'Could not load audit data.' })
@@ -207,6 +231,7 @@ export async function deleteProject(id: string) {
     pages: state.pages.filter((p) => p.projectId !== id),
     issues: state.issues.filter((i) => i.projectId !== id),
     viewers: state.viewers.filter((v) => v.projectId !== id),
+    comments: state.comments.filter((c) => c.projectId !== id),
   })
   await removeObjects(paths).catch(() => undefined)
 }
@@ -251,7 +276,10 @@ export async function createPage(projectId: string, input: PageInput): Promise<A
   return page
 }
 
-export async function updatePage(id: string, input: Partial<PageInput & Pick<AuditPage, 'screenshot'>>) {
+export async function updatePage(
+  id: string,
+  input: Partial<PageInput & Pick<AuditPage, 'screenshot' | 'hidden'>>,
+) {
   const row = check(await db().from('pages').update(input).eq('id', id).select().single(), 'save the page')
   commit({ pages: state.pages.map((p) => (p.id === id ? toPage(row) : p)) })
 }
@@ -293,11 +321,15 @@ export async function deletePage(id: string) {
   commit({
     pages: state.pages.filter((p) => p.id !== id),
     issues: state.issues.filter((i) => i.pageId !== id),
+    comments: state.comments.filter((c) => c.pageId !== id),
   })
   await removeObjects(paths).catch(() => undefined)
 }
 
 // ─── Issues ────────────────────────────────────────────────────────────────
+
+const nextIssueNumber = (projectId: string) =>
+  state.issues.filter((i) => i.projectId === projectId).reduce((m, i) => Math.max(m, i.number), 0) + 1
 
 /** Saves the issue, uploads new images (blobs keyed by image id) and removes dropped ones. */
 export async function saveIssue(
@@ -318,9 +350,7 @@ export async function saveIssue(
       'save the issue',
     )
   } else {
-    const number =
-      state.issues.filter((i) => i.projectId === page.projectId).reduce((m, i) => Math.max(m, i.number), 0) +
-      1
+    const number = nextIssueNumber(page.projectId)
     row = check<Row | null>(
       await client
         .from('issues')
@@ -402,6 +432,94 @@ export async function updateIssueStatus(id: string, status: Issue['status']) {
 export async function deleteIssue(id: string) {
   const issue = state.issues.find((i) => i.id === id)
   check(await db().from('issues').delete().eq('id', id), 'delete the issue')
-  commit({ issues: state.issues.filter((i) => i.id !== id) })
+  commit({
+    issues: state.issues.filter((i) => i.id !== id),
+    comments: state.comments.filter((c) => c.issueId !== id),
+  })
   await removeObjects(issue?.images.map((img) => img.path) ?? []).catch(() => undefined)
+}
+
+/**
+ * Copies an issue (from any page of the project) onto `page` as a new, open issue with the next number.
+ * Screenshots are copied in storage so the two issues stay independent.
+ */
+export async function copyIssueToPage(source: Issue, page: AuditPage): Promise<Issue> {
+  const id = crypto.randomUUID()
+  const { images, ...fields } = source
+  const row = check<Row | null>(
+    await db()
+      .from('issues')
+      .insert({
+        id,
+        project_id: page.projectId,
+        page_id: page.id,
+        number: nextIssueNumber(page.projectId),
+        ...fromIssueDraft({ ...fields, status: 'Open' }),
+      })
+      .select()
+      .single(),
+    'copy the issue',
+  )
+  const copied: IssueImage[] = []
+  for (const img of images) {
+    const imageId = crypto.randomUUID()
+    const path = `${page.projectId}/issues/${id}/${imageId}.${extensionFor(img.type)}`
+    try {
+      await copyObject(img.path, path)
+      copied.push({ ...img, id: imageId, path, createdAt: new Date().toISOString() })
+    } catch {
+      // A screenshot that can't be copied is left out rather than failing the whole copy.
+    }
+  }
+  if (copied.length) {
+    check(
+      await db()
+        .from('issue_images')
+        .insert(
+          copied.map((img, position) => ({
+            id: img.id,
+            issue_id: id,
+            project_id: page.projectId,
+            position,
+            storage_path: img.path,
+            name: img.name,
+            type: img.type,
+            size: img.size,
+            width: img.width,
+            height: img.height,
+            alt: img.alt,
+          })),
+        ),
+      'copy screenshots',
+    )
+  }
+  const issue = toIssue(row!, copied)
+  commit({ issues: [...state.issues, issue] })
+  return issue
+}
+
+// ─── Comments ──────────────────────────────────────────────────────────────
+
+export async function addComment(page: AuditPage, issueId: string | null, body: string, author: string) {
+  const row = check(
+    await db()
+      .from('comments')
+      .insert({
+        project_id: page.projectId,
+        page_id: page.id,
+        issue_id: issueId,
+        author_id: state.userId,
+        author_email: author,
+        body: body.trim(),
+      })
+      .select()
+      .single(),
+    'post the comment',
+  )
+  commit({ comments: [...state.comments, toComment(row)] })
+}
+
+export async function deleteComment(id: string) {
+  check(await db().from('comments').delete().eq('id', id).select('id').single(), 'delete the comment')
+  commit({ comments: state.comments.filter((c) => c.id !== id) })
 }
