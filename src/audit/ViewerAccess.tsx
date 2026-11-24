@@ -1,6 +1,5 @@
 import { useId, useState, type FormEvent } from 'react'
-import { sendMagicLink } from './auth'
-import { addViewer, removeViewer, useAuditData } from './store'
+import { addViewer, removeViewer, revokeAccount, useAuditData } from './store'
 import type { Project } from './types'
 import { button, card, hint, input, label } from './ui/styles'
 import { useConfirm } from './ui/ConfirmDialog'
@@ -17,11 +16,13 @@ export default function ViewerAccess({ project }: { project: Project }) {
   const [busy, setBusy] = useState(false)
   const [fieldError, setFieldError] = useState('')
   const [message, setMessage] = useState('')
+  const [noAccess, setNoAccess] = useState('')
 
   const invite = async (e: FormEvent) => {
     e.preventDefault()
     const value = email.trim()
     setMessage('')
+    setNoAccess('')
     if (!EMAIL_RE.test(value)) {
       setFieldError('Enter an email address, like name@example.com.')
       document.getElementById(`${id}-email`)?.focus()
@@ -35,16 +36,12 @@ export default function ViewerAccess({ project }: { project: Project }) {
     setFieldError('')
     setBusy(true)
     try {
-      await addViewer(project.id, value)
-      let note = ''
-      if (sendLink) {
-        try {
-          await sendMagicLink(value)
-          note = ' A sign-in link was emailed to them.'
-        } catch {
-          note = ' The sign-in email could not be sent; ask them to sign in at this page with that address.'
-        }
-      }
+      const result = await addViewer(project.id, value, sendLink)
+      const note = !sendLink
+        ? ' They can sign in at this page with that address.'
+        : result.emailed
+          ? ' A sign-in link was emailed to them.'
+          : ' The sign-in email could not be sent; ask them to sign in at this page with that address.'
       setMessage(`${value} can now view this project.${note}`)
       setEmail('')
     } catch (err) {
@@ -63,10 +60,36 @@ export default function ViewerAccess({ project }: { project: Project }) {
     if (!ok) return
     try {
       await removeViewer(project.id, viewerEmail)
-      setMessage(`${viewerEmail} no longer has access to this project.`)
+      const elsewhere = viewers.some(
+        (v) => v.email.toLowerCase() === viewerEmail.toLowerCase() && v.projectId !== project.id,
+      )
+      setMessage(
+        `${viewerEmail} no longer has access to this project.${
+          elsewhere ? '' : ' They cannot see any project now.'
+        }`,
+      )
+      setNoAccess(elsewhere ? '' : viewerEmail)
       document.getElementById(`${id}-email`)?.focus()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Could not remove the viewer.')
+    }
+  }
+
+  const revoke = async () => {
+    const target = noAccess
+    const ok = await confirm({
+      title: 'Delete their sign-in?',
+      message: `${target} will no longer be able to sign in to Audit Hub. Their comments stay. You can invite them again later.`,
+      confirmLabel: 'Delete sign-in',
+    })
+    if (!ok) return
+    try {
+      const { deleted } = await revokeAccount(target)
+      setNoAccess('')
+      setMessage(deleted ? `${target} can no longer sign in.` : `${target} had no sign-in to delete.`)
+      document.getElementById(`${id}-email`)?.focus()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Could not delete their sign-in.')
     }
   }
 
@@ -124,6 +147,12 @@ export default function ViewerAccess({ project }: { project: Project }) {
         <div role="status" aria-live="polite" className="text-[0.8125rem]">
           {message && <p className="m-0 mt-1">{message}</p>}
         </div>
+        {noAccess && (
+          <button type="button" className={button('secondary', 'mt-2')} onClick={() => void revoke()}>
+            Also delete their sign-in
+            <span className="sr-only"> for {noAccess}</span>
+          </button>
+        )}
         {list.length === 0 ? (
           <p className="m-0 mt-3 text-[0.8125rem] text-slate">
             No viewers yet. Only owners can see this project.

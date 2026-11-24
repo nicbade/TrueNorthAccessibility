@@ -99,12 +99,21 @@ export async function verifyEmailCode(email: string, code: string) {
   set(data.session, '')
 }
 
+// GoTrue's answers for an address without an account. Swallowed so the form never reveals who has access.
+const NO_ACCOUNT_CODES = new Set(['otp_disabled', 'signup_disabled', 'user_not_found'])
+
+export class RateLimitError extends Error {}
+
 export async function sendMagicLink(email: string) {
   const { error } = await supabase!.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: authRedirectUrl() },
+    options: { shouldCreateUser: false, emailRedirectTo: authRedirectUrl() },
   })
-  if (error) throw error
+  if (!error || (error.code && NO_ACCOUNT_CODES.has(error.code))) return
+  if (error.status === 429 || error.code?.startsWith('over_')) {
+    throw new RateLimitError('Too many sign-in requests. Wait a minute, then try again.')
+  }
+  throw error
 }
 
 export async function signInWithPassword(email: string, password: string) {

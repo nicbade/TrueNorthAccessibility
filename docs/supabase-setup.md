@@ -2,6 +2,8 @@
 
 Audit Hub (`/audit-hub`) stores projects, pages, issues and screenshots in the Supabase project
 **truenorth-audit-hub**. Signing in is by email: a one-time sign-in link, or a password if you set one.
+Audit Hub is **invitation only**: nobody can create an account from the sign-in page. Accounts are created only
+when you invite someone from **Viewer access**.
 You are the **owner** and can edit everything. Anyone you invite to a project is a **viewer**: they can see
 that project's dashboard, pages, issues and screenshots and export it to Excel, but cannot change anything.
 Row Level Security and Storage policies enforce this in the database, not just in the UI.
@@ -10,8 +12,10 @@ Everything Supabase needs is in the repo's `supabase/` folder:
 
 - `supabase/config.toml`: auth settings (site URL, redirect URLs, email templates)
 - `supabase/migrations/`: tables, RLS policies, the private `audit-screenshots` storage bucket and its policies
-- `supabase/templates/magic_link.html`: the sign-in email
-- `supabase/tests/policies.test.mjs`: policy tests to run against a local stack
+- `supabase/templates/magic_link.html`: the sign-in email (also used for invitations)
+- `supabase/functions/manage-viewer/`: the Edge Function that invites viewers and deletes their sign-in. Only
+  an owner can call it. It holds the service-role key on Supabase's servers; the website never has it.
+- `supabase/tests/`: policy, invite and browser tests to run against a local stack
 
 ## 1. Create the Supabase project (done)
 
@@ -26,7 +30,8 @@ Project **truenorth-audit-hub**, US region, RLS enabled.
 3. Set **Supabase directory** to `supabase`.
 4. Set the **production branch** to `master` and turn on **Deploy to production**, so migrations are
    applied automatically when a change is merged into `master`.
-5. Merge the Audit Hub Supabase pull request. The integration runs the migration in `supabase/migrations/`.
+5. Merge the Audit Hub Supabase pull request. The integration runs the migrations in `supabase/migrations/`
+   and deploys the Edge Functions declared in `supabase/config.toml` (currently `manage-viewer`).
    Check **Database → Tables** for `projects`, `pages`, `issues`, `issue_images`, `project_viewers` and
    `app_owners`, and check **Storage** for a **private** bucket named `audit-screenshots`.
 
@@ -35,6 +40,22 @@ Project **truenorth-audit-hub**, US region, RLS enabled.
 - SQL editor: open **SQL Editor → New query**, paste the contents of
   `supabase/migrations/20261124150000_audit_hub.sql`, and click **Run**.
 - CLI: `npx supabase login`, then `npx supabase link --project-ref <project-ref>`, then `npx supabase db push`.
+- Edge Function by CLI (only if **Edge Functions** in the dashboard doesn't list `manage-viewer` after the
+  merge): `npx supabase functions deploy manage-viewer --project-ref <project-ref>`. The `--project-ref` is the
+  ID in your dashboard URL (`supabase.com/dashboard/project/<project-ref>`). The function needs no secrets of
+  its own: Supabase gives every function `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`.
+
+## 2a. Turn off public sign-ups
+
+The GitHub integration does not apply Auth settings from `config.toml` to production, so do this once in the
+dashboard:
+
+1. Open **Authentication → Sign In / Providers**.
+2. Under **User Signups**, turn off **Allow new users to sign up**, and click **Save changes**.
+
+After this, the sign-in page only emails people who already have an account. Anyone else sees the same
+"If this address has been invited…" message, but no email is sent and no account is created. Existing users
+(you, and viewers you've already invited) keep signing in as before.
 
 ## 3. Configure sign-in URLs and the email
 
@@ -43,8 +64,8 @@ Project **truenorth-audit-hub**, US region, RLS enabled.
 3. Under **Redirect URLs**, add `https://truenorth-accessibility.com/audit-hub`.
 4. Set up custom SMTP (section 3a below). **Supabase's hosted dashboard does not let you edit email templates
    until custom SMTP is configured**, and the built-in sender only allows a few emails per hour.
-5. After SMTP is set up, open **Authentication → Email Templates**. For both **Magic Link** and
-   **Confirm signup**, set the message body to the contents of `supabase/templates/magic_link.html`. Its link
+5. After SMTP is set up, open **Authentication → Email Templates**. For **Magic Link** (and **Confirm signup**,
+   which isn't used once sign-ups are off), set the message body to the contents of `supabase/templates/magic_link.html`. Its link
    has the form `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`, which works in any browser or
    device, including an invited viewer's. The email also shows the 6-digit code (`{{ .Token }}`).
    Set the subject of both to `Your TrueNorth Audit Hub sign-in link`.
@@ -61,9 +82,8 @@ that link too, but it only completes sign-in **in the browser that requested it*
 
 - Request your own sign-in link on `/audit-hub` and open it in the same browser. On a phone, request the link
   on the phone.
-- Invite emails sent from **Viewer access** will not sign the viewer in, because your browser requested them.
-  Add the viewer, then tell them to go to `https://truenorth-accessibility.com/audit-hub` and request their own
-  link with that email.
+- Invite emails sent from **Viewer access** need the step 5 template. With the default template the link
+  won't sign the viewer in.
 
 ### 3a. Custom SMTP with Gmail
 
@@ -116,8 +136,10 @@ is rebuilt with them. Until then, `/audit-hub` shows "Audit Hub is not configure
 
 ## 5. Make yourself the owner
 
-1. Go to `https://truenorth-accessibility.com/audit-hub`, enter your email, and click
-   **Email me a sign-in link**. Open the link. You will see an empty, view-only hub. This step creates your user.
+If you already did this, skip it. With sign-ups off, a new owner's account has to be created in the dashboard:
+
+1. Open **Authentication → Users → Add user → Create new user**, enter the email, tick **Auto Confirm User**,
+   and click **Create user**. (A password is optional; you can sign in with a link.)
 2. In the Supabase dashboard, open **SQL Editor** and run:
 
    ```sql
@@ -140,14 +162,16 @@ Your local copy is kept. Choose **Don't import** to hide the banner.
 
 1. Open a project and scroll to **Viewer access**.
 2. Enter the viewer's email. Leave **Email them a sign-in link** checked, and click **Invite viewer**.
-   Until the custom email template from step 3 is in place, this emailed link won't sign them in (see step 3),
-   so tell them to request their own link instead.
-3. The viewer opens the link (or goes to `/audit-hub` and requests their own link with that email).
-   They see only the projects shared with them, with no edit controls.
-4. Click **Remove** next to their email to revoke access immediately.
+   This creates their account (if they don't have one) and emails them the usual sign-in link and 6-digit code.
+3. The viewer opens the link and presses **Continue signing in**, or types the code. Later they can request a
+   new link on `/audit-hub` with the same address. They see only the projects shared with them, with no edit
+   controls.
+4. Click **Remove** next to their email to revoke access to that project immediately. If that was their last
+   project, they can still sign in but see nothing, and Audit Hub offers **Also delete their sign-in** to remove
+   their account. Their comments stay. You can invite them again later.
 
-Viewer access is granted by **confirmed** email address, so someone cannot claim an invite by signing up with
-an email they don't control.
+Only an owner can invite: the `manage-viewer` function checks that the caller is an owner before doing
+anything, and the database rules stop anyone else from adding viewers.
 
 What viewers can do:
 
@@ -171,9 +195,12 @@ npx supabase status           # prints the API URL and keys
 VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_ANON_KEY=<publishable key> pnpm dev
 SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<publishable key> \
   SUPABASE_SERVICE_ROLE_KEY=<secret key> node supabase/tests/policies.test.mjs
-node supabase/tests/sign-in-link-scanner.e2e.mjs   # app built against the local stack and served on :4173
+SUPABASE_ANON_KEY=<anon key> SUPABASE_SERVICE_ROLE_KEY=<service role key> node supabase/tests/invite-only.test.mjs
+# Browser tests: app built against the local stack and served on :4173
+SUPABASE_SERVICE_ROLE_KEY=<service role key> node supabase/tests/sign-in-link-scanner.e2e.mjs
 SUPABASE_ANON_KEY=<publishable key> SUPABASE_SECRET_KEY=<secret key> node supabase/tests/feedback-batch.e2e.mjs
+SUPABASE_ANON_KEY=<publishable key> SUPABASE_SECRET_KEY=<secret key> node supabase/tests/invite-only.e2e.mjs
 ```
 
-Local sign-in emails appear in Mailpit at `http://127.0.0.1:54324`. Local owner:
+`supabase start` also serves the `manage-viewer` function locally. Local sign-in emails appear in Mailpit at `http://127.0.0.1:54324`. Local owner:
 `docker exec supabase_db_truenorth-audit-hub psql -U postgres -c "select public.make_owner('you@example.com')"`.
