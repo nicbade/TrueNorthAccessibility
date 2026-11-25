@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Logo from '../components/Logo'
 import ThemeToggle, { type Theme } from '../components/ThemeToggle'
+import IssueListView, { filterTitle, isFilterValue } from './IssueListView'
 import IssueView from './IssueView'
 import PageView from './PageView'
 import ProjectsView from './ProjectsView'
@@ -34,6 +35,7 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
   const lastIssueId = useRef<string | null>(null)
+  const lastFilter = useRef<string | null>(null)
 
   const project = route.view !== 'projects' ? data.projects.find((p) => p.id === route.projectId) : undefined
   const page =
@@ -48,7 +50,8 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     ready &&
     ((route.view !== 'projects' && !project) ||
       ((route.view === 'page' || route.view === 'issue') && !page) ||
-      (route.view === 'issue' && !issue))
+      (route.view === 'issue' && !issue) ||
+      (route.view === 'issues' && !isFilterValue(route.filter, route.value)))
 
   const title = !supabaseConfigured
     ? 'Not configured'
@@ -58,7 +61,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
         ? 'Not found'
         : issue
           ? `Issue #${issue.number}: ${issue.description}`
-          : (page?.name ?? project?.name ?? 'Audit projects')
+          : route.view === 'issues' && project
+            ? `${filterTitle(route.filter, route.value)} · ${project.name}`
+            : (page?.name ?? project?.name ?? 'Audit projects')
 
   useEffect(() => {
     if (userId) void loadHubData(userId)
@@ -80,15 +85,27 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   useEffect(() => {
     const fromIssue = lastIssueId.current
     lastIssueId.current = route.view === 'issue' ? route.issueId : null
+    const fromFilter = lastFilter.current
+    lastFilter.current = route.view === 'issues' ? `${route.filter}:${route.value}` : null
     if (firstRender.current) {
       firstRender.current = false
       return
     }
     // Coming back from an issue to its page, return focus to that issue in the list.
     const issueLink =
-      route.view === 'page' && fromIssue
+      (route.view === 'page' || route.view === 'issues') && fromIssue
         ? mainRef.current?.querySelector<HTMLElement>(`[data-issue-link="${CSS.escape(fromIssue)}"]`)
         : null
+    // Coming back from a severity/status list to the dashboard, return focus to the link that opened it.
+    const filterLink =
+      route.view === 'project' && fromFilter
+        ? mainRef.current?.querySelector<HTMLElement>(`[data-filter-link="${CSS.escape(fromFilter)}"]`)
+        : null
+    if (filterLink) {
+      filterLink.focus()
+      filterLink.closest('section')?.scrollIntoView({ block: 'center' })
+      return
+    }
     if (issueLink) {
       issueLink.focus()
       issueLink.closest('article')?.scrollIntoView({ block: 'center' })
@@ -101,6 +118,12 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const crumbs: { label: string; href: string }[] = [{ label: 'Projects', href: hrefFor.projects() }]
   if (project) crumbs.push({ label: project.name, href: hrefFor.project(project.id) })
   if (project && page) crumbs.push({ label: page.name, href: hrefFor.page(project.id, page.id) })
+  if (project && route.view === 'issues') {
+    crumbs.push({
+      label: filterTitle(route.filter, route.value),
+      href: hrefFor.issues(project.id, route.filter, route.value),
+    })
+  }
   if (project && page && issue) {
     crumbs.push({ label: `Issue #${issue.number}`, href: hrefFor.issue(project.id, page.id, issue.id) })
   }
@@ -234,6 +257,13 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
               .
             </p>
           </div>
+        ) : route.view === 'issues' && project ? (
+          <IssueListView
+            key={`${route.filter}:${route.value}`}
+            project={project}
+            filter={route.filter}
+            value={route.value}
+          />
         ) : route.view === 'issue' && project && page && issue ? (
           <IssueView key={issue.id} project={project} page={page} issue={issue} />
         ) : route.view === 'page' && project && page ? (

@@ -8,6 +8,10 @@ export type HubRoute =
   | { view: 'project'; projectId: string }
   | { view: 'page'; projectId: string; pageId: string }
   | { view: 'issue'; projectId: string; pageId: string; issueId: string }
+  | { view: 'issues'; projectId: string; filter: IssueFilter; value: string }
+
+/** Project-wide issue lists linked from the dashboard's "By severity" and "By status" tables. */
+export type IssueFilter = 'severity' | 'status'
 
 function subscribe(cb: () => void) {
   window.addEventListener('hashchange', cb)
@@ -32,6 +36,9 @@ export function parseRoute(hash: string): HubRoute {
       }
       return { view: 'page', projectId: parts[1], pageId: parts[3] }
     }
+    if ((parts[2] === 'severity' || parts[2] === 'status') && parts[3]) {
+      return { view: 'issues', projectId: parts[1], filter: parts[2], value: parts[3] }
+    }
     return { view: 'project', projectId: parts[1] }
   }
   return { view: 'projects' }
@@ -42,6 +49,8 @@ export const hrefFor = {
   project: (projectId: string) => `${HUB_PATH}#/projects/${encodeURIComponent(projectId)}`,
   page: (projectId: string, pageId: string) =>
     `${HUB_PATH}#/projects/${encodeURIComponent(projectId)}/pages/${encodeURIComponent(pageId)}`,
+  issues: (projectId: string, filter: IssueFilter, value: string) =>
+    `${hrefFor.project(projectId)}/${filter}/${encodeURIComponent(value)}`,
   issue: (projectId: string, pageId: string, issueId: string) =>
     `${hrefFor.page(projectId, pageId)}/issues/${encodeURIComponent(issueId)}`,
 }

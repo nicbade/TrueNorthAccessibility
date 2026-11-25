@@ -196,6 +196,11 @@ original page. This needs the `20261124210000_move_issue.sql` migration. Without
 comments fails with a "violates foreign key constraint" error. **Copy** instead makes a new issue with the next
 number and leaves the original where it is.
 
+**Issues by severity or status:** on the project dashboard, each row of **By severity** and **By status** is
+a link to a list of every issue in the project with that severity or status, grouped by page (for example all
+**Blocker** issues). The address can be bookmarked or shared with clients. Viewers see the same list without
+issues on hidden pages. As owner you can change the status, edit, move and delete issues there as on a page.
+
 Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
 the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.
 
