@@ -55,6 +55,7 @@ export default function IssueView({ project, page, issue }: Props) {
   const prev = position > 0 ? siblings[position - 1] : undefined
   const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : undefined
   const pageHref = hrefFor.page(project.id, page.id)
+  const component = issue.componentId ? data.components.find((c) => c.id === issue.componentId) : undefined
   const issueHref = (i: Issue) => hrefFor.issue(project.id, page.id, i.id)
 
   const remove = async () => {
@@ -185,6 +186,15 @@ export default function IssueView({ project, page, issue }: Props) {
           <Field term="Category">{issue.category || 'Not set'}</Field>
           <Field term="Location">{issue.location || 'Not set'}</Field>
           <Field term="Scope">{issue.siteWide ? 'Site-wide' : 'This page only'}</Field>
+          <Field term="Component">
+            {component ? (
+              <a href={hrefFor.component(project.id, component.id)} className={link}>
+                {component.name}
+              </a>
+            ) : (
+              'None'
+            )}
+          </Field>
           <div className="min-w-0 sm:col-span-2">
             <dt className="text-[0.75rem] font-semibold uppercase tracking-wide text-slate">WCAG criteria</dt>
             <dd className="m-0 mt-1 text-[0.9375rem]">
@@ -251,6 +261,7 @@ export default function IssueView({ project, page, issue }: Props) {
       {editing && (
         <IssueForm
           issue={issue}
+          projectId={project.id}
           platform={project.platform}
           pageName={page.name}
           onClose={() => setEditing(false)}

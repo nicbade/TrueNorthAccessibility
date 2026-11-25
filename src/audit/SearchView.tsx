@@ -41,15 +41,16 @@ export default function SearchView({ project, q, severity: rawSeverity, status: 
     () => data.issues.filter((i) => i.projectId === project.id),
     [data.issues, project.id],
   )
+  const componentNames = useMemo(() => new Map(data.components.map((c) => [c.id, c.name])), [data.components])
   const query = useMemo(() => parseQuery(q), [q])
   const textMatches = useMemo(() => {
     const found = new Map<string, Match>()
     for (const issue of projectIssues) {
-      const m = matchIssue(issue, query)
+      const m = matchIssue(issue, query, issue.componentId ? componentNames.get(issue.componentId) : '')
       if (m) found.set(issue.id, m)
     }
     return found
-  }, [projectIssues, query])
+  }, [projectIssues, query, componentNames])
   const byText = useMemo(
     () => projectIssues.filter((i) => textMatches.has(i.id)),
     [projectIssues, textMatches],

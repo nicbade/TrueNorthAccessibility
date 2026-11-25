@@ -7,7 +7,7 @@ import { Highlight } from './search'
 import { useAuditData } from './store'
 import { STATUSES, type AuditPage, type Issue, type IssueStatus, type Project } from './types'
 import Badge from './ui/Badge'
-import { button, card, input } from './ui/styles'
+import { button, card, input, link } from './ui/styles'
 
 type Props = {
   project: Project
@@ -36,7 +36,8 @@ export default function IssueCard({
   context,
 }: Props) {
   const id = useId()
-  const { isOwner } = useAuditData()
+  const { isOwner, components } = useAuditData()
+  const component = issue.componentId ? components.find((c) => c.id === issue.componentId) : undefined
   return (
     <article className={`${card} p-4`} aria-labelledby={`${id}-title`}>
       <div className="flex flex-wrap items-center gap-1.5">
@@ -64,6 +65,14 @@ export default function IssueCard({
         </a>
       </h3>
       {context}
+      {component && (
+        <p className="m-0 mt-1 text-[0.75rem] text-slate">
+          <span className="font-semibold">Component:</span>{' '}
+          <a href={hrefFor.component(project.id, component.id)} className={link}>
+            <Highlight text={component.name} terms={terms} />
+          </a>
+        </p>
+      )}
       {issue.location && (
         <p className="m-0 mt-1 text-[0.75rem] text-slate">
           <span className="font-semibold">Location:</span> <Highlight text={issue.location} terms={terms} />

@@ -308,6 +308,7 @@ export default function PageView({ project, page }: Props) {
       {issueForm && (
         <IssueForm
           issue={issueForm.issue}
+          projectId={project.id}
           platform={project.platform}
           pageName={page.name}
           onClose={() => setIssueForm(null)}

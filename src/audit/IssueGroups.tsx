@@ -114,6 +114,7 @@ export default function IssueGroups({ project, issues, headingRef, listName, dec
       {editing && (
         <IssueForm
           issue={editing}
+          projectId={project.id}
           platform={project.platform}
           pageName={pageOf(editing).name}
           onClose={() => setEditing(null)}

@@ -5,10 +5,11 @@ import type { Issue } from './types'
 export type SearchField = { label: string; text: string }
 
 /** Searchable fields of an issue, in the order a match is reported. */
-export function issueFields(issue: Issue): SearchField[] {
+export function issueFields(issue: Issue, componentName = ''): SearchField[] {
   return [
     { label: 'Description', text: issue.description },
     { label: 'Location', text: issue.location },
+    { label: 'Component', text: componentName },
     { label: 'Category', text: issue.category },
     {
       label: 'WCAG',
@@ -21,7 +22,7 @@ export function issueFields(issue: Issue): SearchField[] {
 }
 
 /** Fields the issue card already shows in full, so a match there needs no extra context line. */
-const SHOWN_ON_CARD = new Set(['Description', 'Location', 'WCAG'])
+const SHOWN_ON_CARD = new Set(['Description', 'Location', 'Component', 'WCAG'])
 
 type Token = { kind: 'number'; n: number } | { kind: 'text'; text: string; n?: number }
 
@@ -47,8 +48,8 @@ export function parseQuery(q: string): ParsedQuery {
 
 export type Match = { context: { label: string; text: string }[] }
 
-export function matchIssue(issue: Issue, query: ParsedQuery): Match | null {
-  const fields = issueFields(issue).map((f) => ({ ...f, lower: f.text.toLowerCase() }))
+export function matchIssue(issue: Issue, query: ParsedQuery, componentName = ''): Match | null {
+  const fields = issueFields(issue, componentName).map((f) => ({ ...f, lower: f.text.toLowerCase() }))
   for (const t of query.tokens) {
     if (t.kind === 'number') {
       if (issue.number !== t.n) return null

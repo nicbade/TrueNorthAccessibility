@@ -10,6 +10,7 @@ export type HubRoute =
   | { view: 'issue'; projectId: string; pageId: string; issueId: string }
   | { view: 'issues'; projectId: string; filter: IssueFilter; value: string }
   | ({ view: 'search'; projectId: string } & SearchParams)
+  | { view: 'component'; projectId: string; componentId: string }
 
 /** Project-wide issue lists linked from the dashboard's "By severity" and "By status" tables. */
 export type IssueFilter = 'severity' | 'status'
@@ -53,6 +54,9 @@ export function parseRoute(hash: string): HubRoute {
     if ((parts[2] === 'severity' || parts[2] === 'status') && parts[3]) {
       return { view: 'issues', projectId: parts[1], filter: parts[2], value: parts[3] }
     }
+    if (parts[2] === 'components' && parts[3]) {
+      return { view: 'component', projectId: parts[1], componentId: parts[3] }
+    }
     if (parts[2] === 'search') {
       return {
         view: 'search',
@@ -80,6 +84,8 @@ export const hrefFor = {
     const qs = query.toString()
     return `${hrefFor.project(projectId)}/search${qs ? `?${qs}` : ''}`
   },
+  component: (projectId: string, componentId: string) =>
+    `${hrefFor.project(projectId)}/components/${encodeURIComponent(componentId)}`,
   issue: (projectId: string, pageId: string, issueId: string) =>
     `${hrefFor.page(projectId, pageId)}/issues/${encodeURIComponent(issueId)}`,
 }

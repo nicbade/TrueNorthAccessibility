@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PRIORITIES } from '../data/commonIssues'
 import { wcagLabel } from '../data/wcag'
+import ComponentForm, { deleteComponentConfirm } from './ComponentForm'
 import { downloadProjectWorkbook } from './exportExcel'
 import { computeMetrics, UNSET } from './metrics'
 import PageForm from './PageForm'
@@ -8,8 +9,16 @@ import ProjectForm from './ProjectForm'
 import IssueSearchForm from './IssueSearchForm'
 import ViewerAccess from './ViewerAccess'
 import { hrefFor, navigate } from './router'
-import { createPage, deleteProject, updateProject, useAuditData } from './store'
-import type { Project } from './types'
+import {
+  createComponent,
+  createPage,
+  deleteComponent,
+  deleteProject,
+  updateComponent,
+  updateProject,
+  useAuditData,
+} from './store'
+import { RESOLVED_STATUSES, type Component, type Project } from './types'
 import Badge from './ui/Badge'
 import MetricTable from './ui/MetricTable'
 import { button, card, link, PRIORITY_BAR } from './ui/styles'
@@ -27,11 +36,16 @@ export default function ProjectView({ project }: Props) {
   const [status, setStatus] = useState('')
   const [includeHidden, setIncludeHidden] = useState(false)
   const [search, setSearch] = useState('')
+  const [componentForm, setComponentForm] = useState<{ component?: Component } | null>(null)
 
   const pages = useMemo(() => data.pages.filter((p) => p.projectId === project.id), [data.pages, project.id])
   const issues = useMemo(
     () => data.issues.filter((i) => i.projectId === project.id),
     [data.issues, project.id],
+  )
+  const components = useMemo(
+    () => data.components.filter((c) => c.projectId === project.id),
+    [data.components, project.id],
   )
   const m = useMemo(() => computeMetrics(pages, issues), [pages, issues])
   const hiddenPages = pages.filter((p) => p.hidden)
@@ -46,6 +60,7 @@ export default function ProjectView({ project }: Props) {
         project,
         exportPages,
         issues.filter((i) => ids.has(i.pageId)),
+        components,
       )
       setStatus('Excel workbook downloaded.')
     } catch {
@@ -68,6 +83,20 @@ export default function ProjectView({ project }: Props) {
       navigate(hrefFor.projects())
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Could not delete the project.')
+    }
+  }
+
+  const removeComponent = async (component: Component) => {
+    const attached = issues.filter((i) => i.componentId === component.id).length
+    if (!(await confirm(deleteComponentConfirm(component, attached)))) return
+    try {
+      await deleteComponent(component.id)
+      setStatus(
+        `Component "${component.name}" deleted.${attached ? ` ${attached === 1 ? '1 issue was' : `${attached} issues were`} detached.` : ''}`,
+      )
+      document.getElementById('components-heading')?.focus()
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : 'Could not delete the component.')
     }
   }
 
@@ -303,6 +332,94 @@ export default function ProjectView({ project }: Props) {
         )}
       </section>
 
+      <section aria-labelledby="components-heading" className="mt-8">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 id="components-heading" tabIndex={-1} className="m-0 font-serif text-xl">
+            Components
+          </h2>
+          {isOwner && (
+            <button type="button" className={button('primary')} onClick={() => setComponentForm({})}>
+              <span aria-hidden="true">+</span> Add component
+            </button>
+          )}
+        </div>
+        {components.length === 0 ? (
+          <div className={`${card} p-8 text-center`}>
+            <p className="mx-auto my-0 text-[0.875rem] text-slate">
+              {isOwner
+                ? 'No components yet. Add the shared parts of the site (header, footer, cart drawer…) and attach issues to them to see every issue in one component together.'
+                : 'No components have been added to this project yet.'}
+            </p>
+          </div>
+        ) : (
+          <div className={`${card} overflow-x-auto`}>
+            <table className="w-full border-collapse text-[0.8125rem]">
+              <caption className="sr-only">Components in this project with attached issue counts</caption>
+              <thead className="bg-cream text-left text-[0.6875rem] uppercase tracking-wide text-slate">
+                <tr>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    Component
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-semibold">
+                    Issues
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-semibold">
+                    Open
+                  </th>
+                  {isOwner && (
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {components.map((c) => {
+                  const attached = issues.filter((i) => i.componentId === c.id)
+                  const open = attached.filter((i) => !RESOLVED_STATUSES.includes(i.status)).length
+                  return (
+                    <tr key={c.id} className="border-t border-divider hover:bg-cream">
+                      <th scope="row" className="px-4 py-2.5 text-left font-normal">
+                        <a
+                          href={hrefFor.component(project.id, c.id)}
+                          data-component-link={c.id}
+                          className={`font-semibold ${link}`}
+                        >
+                          {c.name}
+                        </a>
+                        {c.description && (
+                          <span className="block max-w-xl text-[0.75rem] text-slate">{c.description}</span>
+                        )}
+                      </th>
+                      <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{attached.length}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{open}</td>
+                      {isOwner && (
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            className={button('ghost', 'px-2 py-1')}
+                            onClick={() => setComponentForm({ component: c })}
+                          >
+                            Edit<span className="sr-only"> component {c.name}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={button('ghost', 'px-2 py-1 text-danger-text')}
+                            onClick={() => void removeComponent(c)}
+                          >
+                            Delete<span className="sr-only"> component {c.name}</span>
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {isOwner && <ViewerAccess project={project} />}
 
       {editing && (
@@ -312,6 +429,19 @@ export default function ProjectView({ project }: Props) {
           onSubmit={async (input) => {
             await updateProject(project.id, input)
             setEditing(false)
+          }}
+        />
+      )}
+      {componentForm && (
+        <ComponentForm
+          component={componentForm.component}
+          onClose={() => setComponentForm(null)}
+          onSubmit={async (input) => {
+            const existing = componentForm.component
+            if (existing) await updateComponent(existing.id, input)
+            else await createComponent(project.id, input)
+            setComponentForm(null)
+            setStatus(`Component "${input.name}" ${existing ? 'saved' : 'added'}.`)
           }}
         />
       )}
