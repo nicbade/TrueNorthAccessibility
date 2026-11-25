@@ -11,9 +11,10 @@ import {
 } from '../data/commonIssues'
 import { getWcag, parseWcagList } from '../data/wcag'
 import CommonIssueSearch from './CommonIssueSearch'
+import ComponentForm from './ComponentForm'
 import IssueImagesField, { addFiles } from './IssueImagesField'
 import { imageFilesFrom } from './issueImages'
-import { useAuditData } from './store'
+import { createComponent, useAuditData } from './store'
 import { STATUSES, type Issue, type IssueDraft, type IssueStatus } from './types'
 import Dialog from './ui/Dialog'
 import { button, hint, input, label } from './ui/styles'
@@ -26,6 +27,8 @@ type Props = {
   onSubmit: (draft: IssueDraft, pending: Map<string, Blob>) => Promise<void>
   onClose: () => void
 }
+
+const NEW_COMPONENT = '__new_component__'
 
 type FormState = Omit<IssueDraft, 'wcag'> & { wcagText: string }
 
@@ -53,7 +56,10 @@ function fromIssue(issue: Issue): FormState {
 
 export default function IssueForm({ issue, projectId, platform, pageName, onSubmit, onClose }: Props) {
   const id = useId()
-  const components = useAuditData().components.filter((c) => c.projectId === projectId)
+  const { isOwner, components: allComponents } = useAuditData()
+  const components = allComponents.filter((c) => c.projectId === projectId)
+  const [creatingComponent, setCreatingComponent] = useState(false)
+  const componentRef = useRef<HTMLSelectElement>(null)
   const formId = `${id}-form`
   const [values, setValues] = useState<FormState>(() => (issue ? fromIssue(issue) : EMPTY))
   const [error, setError] = useState('')
@@ -347,8 +353,13 @@ export default function IssueForm({ issue, projectId, platform, pageName, onSubm
           <select
             id={`${id}-component`}
             className={input}
+            ref={componentRef}
             value={values.componentId ?? ''}
-            onChange={(e) => set('componentId', e.target.value || null)}
+            onChange={(e) => {
+              // The select stays on the current component until the new one is saved, so Cancel restores it.
+              if (e.target.value === NEW_COMPONENT) setCreatingComponent(true)
+              else set('componentId', e.target.value || null)
+            }}
             aria-describedby={`${id}-component-hint`}
           >
             <option value="">None</option>
@@ -357,11 +368,14 @@ export default function IssueForm({ issue, projectId, platform, pageName, onSubm
                 {c.name}
               </option>
             ))}
+            {isOwner && <option value={NEW_COMPONENT}>+ New component…</option>}
           </select>
           <p id={`${id}-component-hint`} className={`m-0 ${hint}`}>
             {components.length
               ? 'The shared part of the site this issue belongs to. Its component page lists every attached issue.'
-              : 'This project has no components yet. Add them in the Components section of the project dashboard.'}
+              : isOwner
+                ? 'This project has no components yet. Choose "+ New component…" to add one.'
+                : 'This project has no components yet.'}
           </p>
         </div>
 
@@ -477,6 +491,24 @@ export default function IssueForm({ issue, projectId, platform, pageName, onSubm
           />
         </div>
       </form>
+
+      {creatingComponent && (
+        <ComponentForm
+          description="It is added to the project and selected for this issue. The rest of the issue form is kept."
+          onClose={() => {
+            setCreatingComponent(false)
+            setAnnouncement('No component added. The Component selection is unchanged.')
+            requestAnimationFrame(() => componentRef.current?.focus())
+          }}
+          onSubmit={async (input, images, pending) => {
+            const created = await createComponent(projectId, input, images, pending)
+            set('componentId', created.id)
+            setCreatingComponent(false)
+            setAnnouncement(`Component "${created.name}" added and selected.`)
+            requestAnimationFrame(() => componentRef.current?.focus())
+          }}
+        />
+      )}
     </Dialog>
   )
 }

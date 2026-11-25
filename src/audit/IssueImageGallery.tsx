@@ -23,24 +23,28 @@ function ThumbButton({ image, index, onOpen }: { image: IssueImage; index: numbe
 }
 
 function Viewer({
-  issue,
+  images,
+  label,
+  missingAlt,
   index,
   onIndex,
   onClose,
 }: {
-  issue: Issue
+  images: IssueImage[]
+  label: string
+  missingAlt: string
   index: number
   onIndex: (i: number) => void
   onClose: () => void
 }) {
-  const image = issue.images[index]
+  const image = images[index]
   const url = useImageUrl(image.path)
   const [fit, setFit] = useState(true)
-  const count = issue.images.length
+  const count = images.length
   return (
     <Dialog
       size="lg"
-      title={`Issue #${issue.number} screenshot ${index + 1} of ${count}`}
+      title={`${label} screenshot ${index + 1} of ${count}`}
       description={`${image.name} · ${image.width}×${image.height}px`}
       onClose={onClose}
       footer={
@@ -95,9 +99,7 @@ function Viewer({
       </div>
       <p className="m-0 mt-3 text-sm">
         <span className="font-semibold">Alt text:</span>{' '}
-        {image.alt.trim() || (
-          <em className="text-slate">None yet. Edit the issue to describe this screenshot.</em>
-        )}
+        {image.alt.trim() || <em className="text-slate">{missingAlt}</em>}
       </p>
     </Dialog>
   )
@@ -132,35 +134,65 @@ function LargeImage({ image, index, onOpen }: { image: IssueImage; index: number
   )
 }
 
-/** Screenshots for an issue: small thumbnails in lists, or large images (`large`) in the issue view. */
-export default function IssueImageGallery({ issue, large = false }: { issue: Issue; large?: boolean }) {
+type GalleryProps = {
+  images: IssueImage[]
+  /** Names the owner in list labels and the viewer title, e.g. "Issue #3" or "Site header". */
+  label: string
+  /** Shown in the viewer when a screenshot has no alt text. */
+  missingAlt: string
+  large?: boolean
+  /** Grid columns for large images. */
+  className?: string
+}
+
+/** Screenshots as small thumbnails (lists) or large images (`large`), each opening the full-size viewer. */
+export function ImageGallery({ images, label, missingAlt, large = false, className }: GalleryProps) {
   const [open, setOpen] = useState<number | null>(null)
-  if (!issue.images.length) return null
+  if (!images.length) return null
   return (
     <>
       {large ? (
-        <ul aria-label={`Screenshots for issue #${issue.number}`} className="m-0 grid list-none gap-6 p-0">
-          {issue.images.map((img, i) => (
+        <ul
+          aria-label={`Screenshots for ${label}`}
+          className={`m-0 grid list-none gap-6 p-0 ${className ?? ''}`}
+        >
+          {images.map((img, i) => (
             <li key={img.id}>
               <LargeImage image={img} index={i} onOpen={() => setOpen(i)} />
             </li>
           ))}
         </ul>
       ) : (
-        <ul
-          aria-label={`Screenshots for issue #${issue.number}`}
-          className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0"
-        >
-          {issue.images.map((img, i) => (
+        <ul aria-label={`Screenshots for ${label}`} className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0">
+          {images.map((img, i) => (
             <li key={img.id}>
               <ThumbButton image={img} index={i} onOpen={() => setOpen(i)} />
             </li>
           ))}
         </ul>
       )}
-      {open !== null && issue.images[open] && (
-        <Viewer issue={issue} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
+      {open !== null && images[open] && (
+        <Viewer
+          images={images}
+          label={label}
+          missingAlt={missingAlt}
+          index={open}
+          onIndex={setOpen}
+          onClose={() => setOpen(null)}
+        />
       )}
     </>
+  )
+}
+
+/** Screenshots for an issue: small thumbnails in lists, or large images (`large`) in the issue view. */
+export default function IssueImageGallery({ issue, large = false }: { issue: Issue; large?: boolean }) {
+  return (
+    <ImageGallery
+      images={issue.images}
+      label={`Issue #${issue.number}`}
+      missingAlt="None yet. Edit the issue to describe this screenshot."
+      large={large}
+    />
   )
 }
