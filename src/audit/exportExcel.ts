@@ -109,6 +109,7 @@ function issueColumns(issues: Issue[], includePage: boolean): Column[] {
     { header: 'Issue #', width: 10, value: (i) => i.number },
     ...pageCols,
     { header: 'Location / Element', width: 24, wrap: true, value: (i) => i.location },
+    { header: 'Site-wide', width: 11, value: (i) => (i.siteWide ? 'Yes' : 'No') },
     { header: 'Description', width: 50, wrap: true, value: (i) => i.description },
     { header: 'Expected Behaviors', width: 44, wrap: true, value: (i) => i.expectedBehavior },
     { header: 'Fixes', width: 56, wrap: true, value: (i) => i.fix },

@@ -190,6 +190,12 @@ page. The address can be bookmarked or shared with anyone who has access. Viewer
 edit controls. As owner you can also change the status, **Edit issue**, **Copy to a page**, **Move to page…**
 and **Delete issue** there.
 
+**Site-wide issues:** tick **Site-wide issue** when adding or editing an issue that appears across the site
+(header, footer, a shared component) rather than on one page. The issue shows a **Site-wide** badge in the list
+and in the issue view, the Excel export has a **Site-wide** column (Yes/No), and copying or moving the issue
+keeps the flag. Viewers see the badge but can't change it. This needs the `20261125150000_site_wide_issues.sql`
+migration.
+
 **Moving an issue:** **Move to page…** (in the issue view, or **Move** on the page's issue list) moves the issue
 to another page of the same project. It keeps its number, screenshots and comments and disappears from the
 original page. This needs the `20261124210000_move_issue.sql` migration. Without it, moving an issue that has

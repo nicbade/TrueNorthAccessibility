@@ -29,6 +29,7 @@ export default function IssueCard({ project, page, issue, onStatus, onEdit, onMo
         {issue.priority && <Badge kind="priority" value={issue.priority} srPrefix="Priority" />}
         <Badge kind="status" value={issue.status} srPrefix="Status" />
         {issue.category && <Badge kind="neutral" value={issue.category} srPrefix="Category" />}
+        {issue.siteWide && <Badge kind="siteWide" value="Site-wide" />}
         <a
           href={hrefFor.issue(project.id, page.id, issue.id)}
           className={button('secondary', 'ml-auto px-2.5 py-1 text-[0.75rem]')}

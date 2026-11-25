@@ -131,6 +131,7 @@ const toIssue = (r: Row, images: IssueImage[]): Issue => ({
   comments: r.comments,
   status: r.status,
   location: r.location,
+  siteWide: Boolean(r.site_wide),
   commonIssueId: r.common_issue_id,
   images,
   createdAt: r.created_at,
@@ -148,6 +149,7 @@ export const fromIssueDraft = (d: Omit<IssueDraft, 'images'>) => ({
   comments: d.comments,
   status: d.status,
   location: d.location,
+  site_wide: Boolean(d.siteWide),
   common_issue_id: d.commonIssueId,
 })
 

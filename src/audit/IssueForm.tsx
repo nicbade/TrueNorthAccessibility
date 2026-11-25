@@ -38,6 +38,7 @@ const EMPTY: FormState = {
   comments: '',
   status: 'Open',
   location: '',
+  siteWide: false,
   commonIssueId: null,
   images: [],
 }
@@ -333,6 +334,26 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
             value={values.location}
             onChange={(e) => set('location', e.target.value)}
           />
+        </div>
+
+        <div className="flex items-start gap-2 sm:col-span-2">
+          <input
+            id={`${id}-site-wide`}
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-forest-btn"
+            checked={values.siteWide}
+            onChange={(e) => set('siteWide', e.target.checked)}
+            aria-describedby={`${id}-site-wide-hint`}
+          />
+          <div>
+            <label htmlFor={`${id}-site-wide`} className="text-[0.8125rem] font-semibold text-ink">
+              Site-wide issue
+            </label>
+            <p id={`${id}-site-wide-hint`} className="m-0 text-xs leading-5 text-slate">
+              Check this when the problem appears across the site (for example in the header, footer or a
+              shared component), not just on {pageName}.
+            </p>
+          </div>
         </div>
 
         <IssueImagesField

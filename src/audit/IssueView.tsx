@@ -123,6 +123,7 @@ export default function IssueView({ project, page, issue }: Props) {
           {issue.priority && <Badge kind="priority" value={issue.priority} srPrefix="Priority" />}
           <Badge kind="status" value={issue.status} srPrefix="Status" />
           {issue.category && <Badge kind="neutral" value={issue.category} srPrefix="Category" />}
+          {issue.siteWide && <Badge kind="siteWide" value="Site-wide" />}
         </div>
       </header>
 
@@ -183,6 +184,7 @@ export default function IssueView({ project, page, issue }: Props) {
           <Field term="Status">{issue.status}</Field>
           <Field term="Category">{issue.category || 'Not set'}</Field>
           <Field term="Location">{issue.location || 'Not set'}</Field>
+          <Field term="Scope">{issue.siteWide ? 'Site-wide' : 'This page only'}</Field>
           <div className="min-w-0 sm:col-span-2">
             <dt className="text-[0.75rem] font-semibold uppercase tracking-wide text-slate">WCAG criteria</dt>
             <dd className="m-0 mt-1 text-[0.9375rem]">
