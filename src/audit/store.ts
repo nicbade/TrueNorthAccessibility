@@ -12,6 +12,7 @@ import type {
   AuditData,
   AuditPage,
   Comment,
+  Component,
   Issue,
   IssueDraft,
   IssueImage,
@@ -33,6 +34,7 @@ const EMPTY: HubState = {
   userId: null,
   projects: [],
   pages: [],
+  components: [],
   issues: [],
   viewers: [],
   comments: [],
@@ -132,6 +134,7 @@ const toIssue = (r: Row, images: IssueImage[]): Issue => ({
   status: r.status,
   location: r.location,
   siteWide: Boolean(r.site_wide),
+  componentId: r.component_id ?? null,
   commonIssueId: r.common_issue_id,
   images,
   createdAt: r.created_at,
@@ -150,7 +153,17 @@ export const fromIssueDraft = (d: Omit<IssueDraft, 'images'>) => ({
   status: d.status,
   location: d.location,
   site_wide: Boolean(d.siteWide),
+  component_id: d.componentId || null,
   common_issue_id: d.commonIssueId,
+})
+
+const toComponent = (r: Row): Component => ({
+  id: r.id,
+  projectId: r.project_id,
+  name: r.name,
+  description: r.description,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
 })
 
 const toComment = (r: Row): Comment => ({
@@ -177,10 +190,11 @@ export async function loadHubData(userId: string) {
   if (state.userId !== userId || state.status !== 'ready') commit({ ...EMPTY, status: 'loading', userId })
   try {
     const client = db()
-    const [owners, projects, pages, issues, images, viewers, comments] = await Promise.all([
+    const [owners, projects, pages, components, issues, images, viewers, comments] = await Promise.all([
       client.from('app_owners').select('user_id').eq('user_id', userId),
       client.from('projects').select('*').order('updated_at', { ascending: false }),
       client.from('pages').select('*').order('created_at'),
+      client.from('components').select('*').order('name'),
       client.from('issues').select('*').order('number'),
       client.from('issue_images').select('*').order('position'),
       client.from('project_viewers').select('*').order('created_at'),
@@ -194,6 +208,7 @@ export async function loadHubData(userId: string) {
       isOwner: (check(owners, 'check your access') ?? []).length > 0,
       projects: (check(projects, 'load projects') ?? []).map(toProject),
       pages: (check(pages, 'load pages') ?? []).map(toPage),
+      components: (check(components, 'load components') ?? []).map(toComponent),
       issues: (check(issues, 'load issues') ?? []).map((r: Row) => toIssue(r, byIssue.get(r.id) ?? [])),
       viewers: (check(viewers, 'load viewers') ?? []).map(toViewer),
       comments: (check(comments, 'load comments') ?? []).map(toComment),
@@ -239,6 +254,7 @@ export async function deleteProject(id: string) {
   commit({
     projects: state.projects.filter((p) => p.id !== id),
     pages: state.pages.filter((p) => p.projectId !== id),
+    components: state.components.filter((c) => c.projectId !== id),
     issues: state.issues.filter((i) => i.projectId !== id),
     viewers: state.viewers.filter((v) => v.projectId !== id),
     comments: state.comments.filter((c) => c.projectId !== id),
@@ -350,6 +366,68 @@ export async function deletePage(id: string) {
     comments: state.comments.filter((c) => c.pageId !== id),
   })
   await removeObjects(paths).catch(() => undefined)
+}
+
+// ─── Components ────────────────────────────────────────────────────────────
+
+export type ComponentInput = Pick<Component, 'name' | 'description'>
+
+const byName = (a: Component, b: Component) =>
+  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+
+function componentError(e: unknown, action: string): never {
+  if (e instanceof SaveError && /components_project_name_unique|duplicate key/.test(e.message)) {
+    throw new SaveError(`Could not ${action}: this project already has a component with that name.`)
+  }
+  throw e
+}
+
+export async function createComponent(projectId: string, input: ComponentInput): Promise<Component> {
+  try {
+    const row = check(
+      await db()
+        .from('components')
+        .insert({ project_id: projectId, name: input.name.trim(), description: input.description.trim() })
+        .select()
+        .single(),
+      'add the component',
+    )
+    const component = toComponent(row)
+    commit({ components: [...state.components, component].sort(byName) })
+    return component
+  } catch (e) {
+    componentError(e, 'add the component')
+  }
+}
+
+export async function updateComponent(id: string, input: ComponentInput) {
+  try {
+    const row = check(
+      await db()
+        .from('components')
+        .update({ name: input.name.trim(), description: input.description.trim() })
+        .eq('id', id)
+        .select()
+        .single(),
+      'save the component',
+    )
+    commit({ components: state.components.map((c) => (c.id === id ? toComponent(row) : c)).sort(byName) })
+  } catch (e) {
+    componentError(e, 'save the component')
+  }
+}
+
+/**
+ * The database detaches the component's issues (component_id becomes null); they are not deleted.
+ * `beforeRemove` runs after the delete succeeds, before the component leaves the store (e.g. to leave its view).
+ */
+export async function deleteComponent(id: string, beforeRemove?: () => void) {
+  check(await db().from('components').delete().eq('id', id), 'delete the component')
+  beforeRemove?.()
+  commit({
+    components: state.components.filter((c) => c.id !== id),
+    issues: state.issues.map((i) => (i.componentId === id ? { ...i, componentId: null } : i)),
+  })
 }
 
 // ─── Issues ────────────────────────────────────────────────────────────────
@@ -504,7 +582,11 @@ export async function copyIssueToPage(source: Issue, page: AuditPage): Promise<I
         project_id: page.projectId,
         page_id: page.id,
         number: nextIssueNumber(page.projectId),
-        ...fromIssueDraft({ ...fields, status: 'Open' }),
+        ...fromIssueDraft({
+          ...fields,
+          status: 'Open',
+          componentId: source.projectId === page.projectId ? fields.componentId : null,
+        }),
       })
       .select()
       .single(),

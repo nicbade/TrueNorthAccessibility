@@ -73,6 +73,8 @@ export type Issue = {
   status: IssueStatus
   location: string
   siteWide: boolean
+  /** A component in the same project, or null. */
+  componentId: string | null
   commonIssueId: string | null
   images: IssueImage[]
   createdAt: string
@@ -99,9 +101,20 @@ export type Comment = {
   createdAt: string
 }
 
+/** A reusable part of the site (header, cart drawer, date picker…) that issues can be attached to. */
+export type Component = {
+  id: string
+  projectId: string
+  name: string
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type AuditData = {
   projects: Project[]
   pages: AuditPage[]
+  components: Component[]
   issues: Issue[]
   viewers: ProjectViewer[]
   comments: Comment[]

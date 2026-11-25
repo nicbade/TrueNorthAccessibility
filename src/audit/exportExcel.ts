@@ -4,7 +4,7 @@ import { getWcag } from '../data/wcag'
 import { computeMetrics, UNSET } from './metrics'
 import { imageAlt } from './issueImages'
 import { downloadObject } from './supabase'
-import type { AuditPage, Issue, IssueImage, Project } from './types'
+import type { AuditPage, Component, Issue, IssueImage, Project } from './types'
 
 const ACCENT = 'FF2A5C1E'
 const HEADER_FONT = { bold: true, color: { argb: 'FFFFFFFF' } }
@@ -87,7 +87,7 @@ function exampleColumn(kind: ExampleKind): Column {
 }
 
 /** Column order follows the common issues workbook, with audit fields slotted in beside related columns. */
-function issueColumns(issues: Issue[], includePage: boolean): Column[] {
+function issueColumns(issues: Issue[], includePage: boolean, componentNames: Map<string, string>): Column[] {
   const kinds: ExampleKind[] = ['Internal', 'External']
   if (issues.some((i) => examplesOf(i, 'iOS').length)) kinds.push('iOS')
   if (issues.some((i) => examplesOf(i, 'Android').length)) kinds.push('Android')
@@ -110,6 +110,12 @@ function issueColumns(issues: Issue[], includePage: boolean): Column[] {
     ...pageCols,
     { header: 'Location / Element', width: 24, wrap: true, value: (i) => i.location },
     { header: 'Site-wide', width: 11, value: (i) => (i.siteWide ? 'Yes' : 'No') },
+    {
+      header: 'Component',
+      width: 20,
+      wrap: true,
+      value: (i) => (i.componentId ? (componentNames.get(i.componentId) ?? '') : ''),
+    },
     { header: 'Description', width: 50, wrap: true, value: (i) => i.description },
     { header: 'Expected Behaviors', width: 44, wrap: true, value: (i) => i.expectedBehavior },
     { header: 'Fixes', width: 56, wrap: true, value: (i) => i.fix },
@@ -166,6 +172,7 @@ function addIssueSheet(
   pagesById: Map<string, AuditPage>,
   includePage: boolean,
   embedded: Map<string, EmbeddedImage>,
+  componentNames: Map<string, string>,
 ) {
   const sheet = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }] })
   const shotCount = Math.max(0, ...issues.map((i) => i.images.length))
@@ -178,7 +185,7 @@ function addIssueSheet(
       return img && !embedded.has(img.id) ? `${img.name} (image unavailable)` : ''
     },
   }))
-  const cols = [...issueColumns(issues, includePage), ...shotCols]
+  const cols = [...issueColumns(issues, includePage, componentNames), ...shotCols]
   const firstShotCol = cols.length - shotCount + 1
   sheet.columns = cols.map((c) => ({ header: c.header, width: c.width }))
   styleHeaderRow(sheet, 1, cols.length)
@@ -377,6 +384,7 @@ export async function buildProjectWorkbook(
   project: Project,
   pages: AuditPage[],
   issues: Issue[],
+  components: Component[] = [],
 ): Promise<Blob> {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
@@ -389,11 +397,12 @@ export async function buildProjectWorkbook(
     (a, b) => (pageOrder.get(a.pageId) ?? 0) - (pageOrder.get(b.pageId) ?? 0) || a.number - b.number,
   )
   const pagesById = new Map(pages.map((p) => [p.id, p]))
+  const componentNames = new Map(components.map((c) => [c.id, c.name]))
 
   const embedded = await embedIssueImages(wb, sorted)
 
   addSummarySheet(wb, project, pages, sorted)
-  addIssueSheet(wb, 'All Issues', sorted, pagesById, true, embedded)
+  addIssueSheet(wb, 'All Issues', sorted, pagesById, true, embedded, componentNames)
   const used = new Set(['summary', 'all issues'])
   pages.forEach((page) => {
     addIssueSheet(
@@ -403,6 +412,7 @@ export async function buildProjectWorkbook(
       pagesById,
       false,
       embedded,
+      componentNames,
     )
   })
 
@@ -410,8 +420,13 @@ export async function buildProjectWorkbook(
   return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
 }
 
-export async function downloadProjectWorkbook(project: Project, pages: AuditPage[], issues: Issue[]) {
-  const blob = await buildProjectWorkbook(project, pages, issues)
+export async function downloadProjectWorkbook(
+  project: Project,
+  pages: AuditPage[],
+  issues: Issue[],
+  components: Component[],
+) {
+  const blob = await buildProjectWorkbook(project, pages, issues, components)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

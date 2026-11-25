@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Logo from '../components/Logo'
 import ThemeToggle, { type Theme } from '../components/ThemeToggle'
+import ComponentView from './ComponentView'
 import IssueListView, { filterTitle, isFilterValue } from './IssueListView'
 import IssueView from './IssueView'
 import PageView from './PageView'
@@ -37,6 +38,7 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const firstRender = useRef(true)
   const lastIssueId = useRef<string | null>(null)
   const lastFilter = useRef<string | null>(null)
+  const lastComponentId = useRef<string | null>(null)
 
   const project = route.view !== 'projects' ? data.projects.find((p) => p.id === route.projectId) : undefined
   const page =
@@ -47,11 +49,16 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     route.view === 'issue'
       ? data.issues.find((i) => i.id === route.issueId && i.pageId === route.pageId)
       : undefined
+  const component =
+    route.view === 'component'
+      ? data.components.find((c) => c.id === route.componentId && c.projectId === route.projectId)
+      : undefined
   const missing =
     ready &&
     ((route.view !== 'projects' && !project) ||
       ((route.view === 'page' || route.view === 'issue') && !page) ||
       (route.view === 'issue' && !issue) ||
+      (route.view === 'component' && !component) ||
       (route.view === 'issues' && !isFilterValue(route.filter, route.value)))
 
   const title = !supabaseConfigured
@@ -64,9 +71,11 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
           ? `Issue #${issue.number}: ${issue.description}`
           : route.view === 'issues' && project
             ? `${filterTitle(route.filter, route.value)} · ${project.name}`
-            : route.view === 'search' && project
-              ? `${route.q ? `Search: ${route.q}` : 'Search issues'} · ${project.name}`
-              : (page?.name ?? project?.name ?? 'Audit projects')
+            : component && project
+              ? `Component: ${component.name} · ${project.name}`
+              : route.view === 'search' && project
+                ? `${route.q ? `Search: ${route.q}` : 'Search issues'} · ${project.name}`
+                : (page?.name ?? project?.name ?? 'Audit projects')
 
   useEffect(() => {
     if (userId) void loadHubData(userId)
@@ -93,13 +102,19 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     lastIssueId.current = route.view === 'issue' ? route.issueId : null
     const fromFilter = lastFilter.current
     lastFilter.current = route.view === 'issues' ? `${route.filter}:${route.value}` : null
+    const fromComponent = lastComponentId.current
+    lastComponentId.current = route.view === 'component' ? route.componentId : null
     if (firstRender.current) {
       firstRender.current = false
       return
     }
     // Coming back from an issue to its page, return focus to that issue in the list.
     const issueLink =
-      (route.view === 'page' || route.view === 'issues' || route.view === 'search') && fromIssue
+      (route.view === 'page' ||
+        route.view === 'issues' ||
+        route.view === 'search' ||
+        route.view === 'component') &&
+      fromIssue
         ? mainRef.current?.querySelector<HTMLElement>(`[data-issue-link="${CSS.escape(fromIssue)}"]`)
         : null
     // Coming back from a severity/status list to the dashboard, return focus to the link that opened it.
@@ -107,6 +122,16 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
       route.view === 'project' && fromFilter
         ? mainRef.current?.querySelector<HTMLElement>(`[data-filter-link="${CSS.escape(fromFilter)}"]`)
         : null
+    // Coming back from a component to the dashboard, return focus to its link in the Components table.
+    const componentLink =
+      route.view === 'project' && fromComponent
+        ? mainRef.current?.querySelector<HTMLElement>(`[data-component-link="${CSS.escape(fromComponent)}"]`)
+        : null
+    if (componentLink) {
+      componentLink.focus()
+      componentLink.closest('tr')?.scrollIntoView({ block: 'center' })
+      return
+    }
     if (filterLink) {
       filterLink.focus()
       filterLink.closest('section')?.scrollIntoView({ block: 'center' })
@@ -129,6 +154,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
       label: filterTitle(route.filter, route.value),
       href: hrefFor.issues(project.id, route.filter, route.value),
     })
+  }
+  if (project && component) {
+    crumbs.push({ label: `Component: ${component.name}`, href: hrefFor.component(project.id, component.id) })
   }
   if (project && route.view === 'search') {
     crumbs.push({ label: 'Search issues', href: hrefFor.search(project.id, route) })
@@ -259,7 +287,7 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
               Not found
             </h1>
             <p className="mt-2">
-              That project, page or issue does not exist, or you don't have access to it.{' '}
+              That project, page, component or issue does not exist, or you don't have access to it.{' '}
               <a href={hrefFor.projects()} className={link}>
                 Return to all projects
               </a>
@@ -273,6 +301,8 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
             filter={route.filter}
             value={route.value}
           />
+        ) : route.view === 'component' && project && component ? (
+          <ComponentView key={component.id} project={project} component={component} />
         ) : route.view === 'search' && project ? (
           <SearchView
             key={project.id}

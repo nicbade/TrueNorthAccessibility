@@ -13,12 +13,14 @@ import { getWcag, parseWcagList } from '../data/wcag'
 import CommonIssueSearch from './CommonIssueSearch'
 import IssueImagesField, { addFiles } from './IssueImagesField'
 import { imageFilesFrom } from './issueImages'
+import { useAuditData } from './store'
 import { STATUSES, type Issue, type IssueDraft, type IssueStatus } from './types'
 import Dialog from './ui/Dialog'
 import { button, hint, input, label } from './ui/styles'
 
 type Props = {
   issue?: Issue
+  projectId: string
   platform: Platform
   pageName: string
   onSubmit: (draft: IssueDraft, pending: Map<string, Blob>) => Promise<void>
@@ -39,6 +41,7 @@ const EMPTY: FormState = {
   status: 'Open',
   location: '',
   siteWide: false,
+  componentId: null,
   commonIssueId: null,
   images: [],
 }
@@ -48,8 +51,9 @@ function fromIssue(issue: Issue): FormState {
   return { ...EMPTY, ...rest, wcagText: wcag.join(', ') }
 }
 
-export default function IssueForm({ issue, platform, pageName, onSubmit, onClose }: Props) {
+export default function IssueForm({ issue, projectId, platform, pageName, onSubmit, onClose }: Props) {
   const id = useId()
+  const components = useAuditData().components.filter((c) => c.projectId === projectId)
   const formId = `${id}-form`
   const [values, setValues] = useState<FormState>(() => (issue ? fromIssue(issue) : EMPTY))
   const [error, setError] = useState('')
@@ -323,7 +327,7 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
           </datalist>
         </div>
 
-        <div className="sm:col-span-2">
+        <div>
           <label htmlFor={`${id}-location`} className={label}>
             Location or element
           </label>
@@ -334,6 +338,31 @@ export default function IssueForm({ issue, platform, pageName, onSubmit, onClose
             value={values.location}
             onChange={(e) => set('location', e.target.value)}
           />
+        </div>
+
+        <div>
+          <label htmlFor={`${id}-component`} className={label}>
+            Component
+          </label>
+          <select
+            id={`${id}-component`}
+            className={input}
+            value={values.componentId ?? ''}
+            onChange={(e) => set('componentId', e.target.value || null)}
+            aria-describedby={`${id}-component-hint`}
+          >
+            <option value="">None</option>
+            {components.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <p id={`${id}-component-hint`} className={`m-0 ${hint}`}>
+            {components.length
+              ? 'The shared part of the site this issue belongs to. Its component page lists every attached issue.'
+              : 'This project has no components yet. Add them in the Components section of the project dashboard.'}
+          </p>
         </div>
 
         <div className="flex items-start gap-2 sm:col-span-2">

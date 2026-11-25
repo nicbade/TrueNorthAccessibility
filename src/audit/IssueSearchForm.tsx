@@ -51,7 +51,7 @@ export default function IssueSearchForm({
       </div>
       <p id={`${id}-hint`} className="m-0 mt-1 text-[0.75rem] text-slate">
         Searches every page by issue number (#12), description, expected behavior, how to fix, notes,
-        location, category and WCAG criterion.
+        location, component, category and WCAG criterion.
       </p>
     </form>
   )

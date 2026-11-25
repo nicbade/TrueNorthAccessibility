@@ -142,6 +142,40 @@ check((await viewer.from('issues').select('id').eq('id', issueH.id)).data?.lengt
 check(!(await viewer.storage.from(BUCKET).download(pathH)).error, 'unhiding a page restores screenshot access')
 await owner.from('pages').update({ hidden: true }).eq('id', pageH.id)
 
+// ─── Components ───
+const { data: compA, error: compErr } = await owner
+  .from('components')
+  .insert({ project_id: projA.id, name: 'Header', description: 'Logo, search and main nav' })
+  .select()
+  .single()
+check(!compErr && compA, 'owner can create a component')
+const { data: compB } = await owner.from('components').insert({ project_id: projB.id, name: 'Footer' }).select().single()
+check(!!(await owner.from('components').insert({ project_id: projA.id, name: ' header ' })).error, 'component names are unique per project (ignoring case)')
+check(!!(await owner.from('components').insert({ project_id: projA.id, name: '  ' })).error, 'component names cannot be blank')
+check(!(await owner.from('issues').update({ component_id: compA.id }).eq('id', issueA.id)).error, 'owner can attach an issue to a component')
+check(!(await owner.from('issues').update({ component_id: compA.id }).eq('id', issueH.id)).error, 'owner can attach a hidden-page issue')
+check(!!(await owner.from('issues').update({ component_id: compB.id }).eq('id', issueA.id)).error, 'an issue cannot use another project\'s component')
+const vComps = (await viewer.from('components').select('id, name, description')).data ?? []
+check(vComps.length === 1 && vComps[0].id === compA.id && vComps[0].description, 'viewer sees only the invited project\'s components')
+check((await stranger.from('components').select('id')).data?.length === 0, 'uninvited users cannot see components')
+check(!(await anon.from('components').select('id')).data?.length, 'anonymous users cannot see components')
+const vAttached = (await viewer.from('issues').select('id').eq('component_id', compA.id)).data ?? []
+check(vAttached.length === 1 && vAttached[0].id === issueA.id, 'viewer sees a component\'s issues except those on hidden pages')
+check((await owner.from('issues').select('id').eq('component_id', compA.id)).data?.length === 2, 'owner sees all of a component\'s issues')
+check(!!(await viewer.from('components').insert({ project_id: projA.id, name: 'Nope' })).error, 'viewer cannot create components')
+await viewer.from('components').update({ name: 'Renamed' }).eq('id', compA.id)
+check((await owner.from('components').select('name').eq('id', compA.id).single()).data.name === 'Header', 'viewer cannot rename components')
+await viewer.from('components').delete().eq('id', compA.id)
+check((await owner.from('components').select('id').eq('id', compA.id)).data?.length === 1, 'viewer cannot delete components')
+await viewer.from('issues').update({ component_id: null }).eq('id', issueA.id)
+check((await owner.from('issues').select('component_id').eq('id', issueA.id).single()).data.component_id === compA.id, 'viewer cannot detach an issue from its component')
+const { data: renamed } = await owner.from('components').update({ name: 'Site header' }).eq('id', compA.id).select().single()
+check(renamed?.name === 'Site header' && renamed.updated_at >= compA.updated_at, 'owner can rename a component')
+check(!(await owner.from('components').delete().eq('id', compA.id)).error, 'owner can delete a component')
+const detached = (await owner.from('issues').select('id, component_id, project_id').in('id', [issueA.id, issueH.id])).data ?? []
+check(detached.length === 2 && detached.every((i) => i.component_id === null && i.project_id === projA.id), 'deleting a component detaches its issues')
+await owner.from('components').delete().eq('id', compB.id)
+
 // ─── Comments ───
 const comment = (client, email, fields) =>
   client.from('comments').insert({ project_id: projA.id, page_id: pageA.id, author_email: email, ...fields }).select().single()
