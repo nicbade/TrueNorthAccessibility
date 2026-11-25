@@ -201,6 +201,12 @@ a link to a list of every issue in the project with that severity or status, gro
 **Blocker** issues). The address can be bookmarked or shared with clients. Viewers see the same list without
 issues on hidden pages. As owner you can change the status, edit, move and delete issues there as on a page.
 
+**Searching issues:** the **Search issues** box on the project dashboard searches every page of the project
+by issue number (`#12` or `12`), description, expected behavior, how to fix, auditor notes, location,
+category and WCAG criterion (number or name). Results are grouped by page with the matching words
+highlighted, and can be narrowed with the **Severity** and **Status** buttons. The address keeps the search
+and filters, so it can be bookmarked or shared. Viewers never see issues on hidden pages in the results.
+
 Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
 the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.
 

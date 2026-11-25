@@ -1,8 +1,9 @@
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 import { getWcag } from '../data/wcag'
 import Comments from './Comments'
 import IssueImageGallery from './IssueImageGallery'
 import { hrefFor } from './router'
+import { Highlight } from './search'
 import { useAuditData } from './store'
 import { STATUSES, type AuditPage, type Issue, type IssueStatus, type Project } from './types'
 import Badge from './ui/Badge'
@@ -16,10 +17,24 @@ type Props = {
   onEdit: (issue: Issue) => void
   onMove: (issue: Issue) => void
   onDelete: (issue: Issue) => void
+  /** Search terms to highlight in the title, location and WCAG lines. */
+  terms?: string[]
+  /** Shown under the title, e.g. where a search matched. */
+  context?: ReactNode
 }
 
 /** An issue in a list (page view, severity/status views). Owner actions show only for owners. */
-export default function IssueCard({ project, page, issue, onStatus, onEdit, onMove, onDelete }: Props) {
+export default function IssueCard({
+  project,
+  page,
+  issue,
+  onStatus,
+  onEdit,
+  onMove,
+  onDelete,
+  terms,
+  context,
+}: Props) {
   const id = useId()
   const { isOwner } = useAuditData()
   return (
@@ -44,18 +59,22 @@ export default function IssueCard({ project, page, issue, onStatus, onEdit, onMo
           className="rounded text-ink underline decoration-slate underline-offset-4 hover:text-forest hover:decoration-forest"
         >
           <span className="sr-only">Issue {issue.number}: </span>
-          {issue.description}
+          <Highlight text={issue.description} terms={terms} />
         </a>
       </h3>
+      {context}
       {issue.location && (
         <p className="m-0 mt-1 text-[0.75rem] text-slate">
-          <span className="font-semibold">Location:</span> {issue.location}
+          <span className="font-semibold">Location:</span> <Highlight text={issue.location} terms={terms} />
         </p>
       )}
       {issue.wcag.length > 0 && (
         <p className="m-0 mt-1 text-[0.75rem] text-slate">
           <span className="font-semibold">WCAG:</span>{' '}
-          {issue.wcag.map((w) => (getWcag(w) ? `${w} ${getWcag(w)!.name}` : w)).join('; ')}
+          <Highlight
+            text={issue.wcag.map((w) => (getWcag(w) ? `${w} ${getWcag(w)!.name}` : w)).join('; ')}
+            terms={terms}
+          />
         </p>
       )}
       <IssueImageGallery issue={issue} />
