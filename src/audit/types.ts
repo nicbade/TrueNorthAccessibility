@@ -72,6 +72,7 @@ export type Issue = {
   comments: string
   status: IssueStatus
   location: string
+  siteWide: boolean
   commonIssueId: string | null
   images: IssueImage[]
   createdAt: string

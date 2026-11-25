@@ -110,6 +110,13 @@ check(!(await owner.storage.from(BUCKET).download(pathA)).error, 'viewer cannot 
 check(!(await owner.from('issues').update({ priority: 'UX / Content' }).eq('id', issueA.id)).error, 'owner can set the UX / Content severity')
 check(!!(await owner.from('issues').update({ priority: 'Cosmetic' }).eq('id', issueA.id)).error, 'unknown severities are rejected')
 
+// ─── Site-wide flag ───
+check((await owner.from('issues').select('site_wide').eq('id', issueA.id).single()).data.site_wide === false, 'issues are not site-wide by default')
+check(!(await owner.from('issues').update({ site_wide: true }).eq('id', issueA.id)).error, 'owner can mark an issue site-wide')
+check((await viewer.from('issues').select('site_wide').eq('id', issueA.id).single()).data?.site_wide === true, 'viewer can see the site-wide flag')
+await viewer.from('issues').update({ site_wide: false }).eq('id', issueA.id)
+check((await owner.from('issues').select('site_wide').eq('id', issueA.id).single()).data.site_wide === true, 'viewer cannot change the site-wide flag')
+
 // ─── Hidden pages ───
 const { data: pageH } = await owner.from('pages').insert({ project_id: projA.id, name: 'Draft', hidden: true }).select().single()
 const { data: issueH } = await owner

@@ -52,3 +52,6 @@ export const STATUS_STYLES: Record<string, string> = {
 }
 
 export const NEUTRAL_BADGE = 'bg-cream text-ink ring-divider'
+
+export const SITE_WIDE_BADGE =
+  'bg-sky-100 text-sky-950 ring-sky-400 dark:bg-sky-950 dark:text-sky-100 dark:ring-sky-600'
