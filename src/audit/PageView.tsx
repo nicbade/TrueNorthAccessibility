@@ -5,6 +5,7 @@ import Comments from './Comments'
 import CopyIssueDialog from './CopyIssueDialog'
 import IssueForm from './IssueForm'
 import IssueImageGallery from './IssueImageGallery'
+import MoveIssueDialog from './MoveIssueDialog'
 import PageForm from './PageForm'
 import { hrefFor, navigate } from './router'
 import ScreenshotPanel from './ScreenshotPanel'
@@ -37,6 +38,7 @@ export default function PageView({ project, page }: Props) {
   const [priorityFilter, setPriorityFilter] = useState('All')
   const [sort, setSort] = useState<Sort>('number')
   const [copying, setCopying] = useState(false)
+  const [moving, setMoving] = useState<Issue | null>(null)
   const [togglingHidden, setTogglingHidden] = useState(false)
   const [announcement, setAnnouncement] = useState('')
 
@@ -257,13 +259,26 @@ export default function PageView({ project, page }: Props) {
                         {issue.category && (
                           <Badge kind="neutral" value={issue.category} srPrefix="Category" />
                         )}
+                        <a
+                          href={hrefFor.issue(project.id, page.id, issue.id)}
+                          className={button('secondary', 'ml-auto px-2.5 py-1 text-[0.75rem]')}
+                        >
+                          <span aria-hidden="true">⤢ </span>Open full view
+                          <span className="sr-only"> of issue #{issue.number}</span>
+                        </a>
                       </div>
                       <h3
                         id={`${id}-i-${issue.id}`}
                         className="m-0 mt-2 font-sans text-[0.9375rem] font-semibold leading-6"
                       >
-                        <span className="sr-only">Issue {issue.number}: </span>
-                        {issue.description}
+                        <a
+                          href={hrefFor.issue(project.id, page.id, issue.id)}
+                          data-issue-link={issue.id}
+                          className="rounded text-ink underline decoration-slate underline-offset-4 hover:text-forest hover:decoration-forest"
+                        >
+                          <span className="sr-only">Issue {issue.number}: </span>
+                          {issue.description}
+                        </a>
                       </h3>
                       {issue.location && (
                         <p className="m-0 mt-1 text-[0.75rem] text-slate">
@@ -334,6 +349,13 @@ export default function PageView({ project, page }: Props) {
                             </button>
                             <button
                               type="button"
+                              className={button('ghost')}
+                              onClick={() => setMoving(issue)}
+                            >
+                              Move<span className="sr-only"> issue #{issue.number} to another page</span>
+                            </button>
+                            <button
+                              type="button"
                               className={button('ghost', 'text-danger-text')}
                               onClick={() => void removeIssue(issue)}
                             >
@@ -360,6 +382,17 @@ export default function PageView({ project, page }: Props) {
           onCopied={(copy, source) => {
             setCopying(false)
             setAnnouncement(`Issue #${source.number} copied to this page as issue #${copy.number}.`)
+          }}
+        />
+      )}
+      {moving && (
+        <MoveIssueDialog
+          page={page}
+          issue={moving}
+          onClose={() => setMoving(null)}
+          onMoved={(moved, to) => {
+            setMoving(null)
+            navigate(hrefFor.issue(project.id, to.id, moved.id))
           }}
         />
       )}

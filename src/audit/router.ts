@@ -7,6 +7,7 @@ export type HubRoute =
   | { view: 'projects' }
   | { view: 'project'; projectId: string }
   | { view: 'page'; projectId: string; pageId: string }
+  | { view: 'issue'; projectId: string; pageId: string; issueId: string }
 
 function subscribe(cb: () => void) {
   window.addEventListener('hashchange', cb)
@@ -25,7 +26,12 @@ export function isHubPath(pathname: string) {
 export function parseRoute(hash: string): HubRoute {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent)
   if (parts[0] === 'projects' && parts[1]) {
-    if (parts[2] === 'pages' && parts[3]) return { view: 'page', projectId: parts[1], pageId: parts[3] }
+    if (parts[2] === 'pages' && parts[3]) {
+      if (parts[4] === 'issues' && parts[5]) {
+        return { view: 'issue', projectId: parts[1], pageId: parts[3], issueId: parts[5] }
+      }
+      return { view: 'page', projectId: parts[1], pageId: parts[3] }
+    }
     return { view: 'project', projectId: parts[1] }
   }
   return { view: 'projects' }
@@ -36,6 +42,8 @@ export const hrefFor = {
   project: (projectId: string) => `${HUB_PATH}#/projects/${encodeURIComponent(projectId)}`,
   page: (projectId: string, pageId: string) =>
     `${HUB_PATH}#/projects/${encodeURIComponent(projectId)}/pages/${encodeURIComponent(pageId)}`,
+  issue: (projectId: string, pageId: string, issueId: string) =>
+    `${hrefFor.page(projectId, pageId)}/issues/${encodeURIComponent(issueId)}`,
 }
 
 export function navigate(href: string) {

@@ -103,21 +103,61 @@ function Viewer({
   )
 }
 
-export default function IssueImageGallery({ issue }: { issue: Issue }) {
+function LargeImage({ image, index, onOpen }: { image: IssueImage; index: number; onOpen: () => void }) {
+  const url = useImageUrl(image.path)
+  return (
+    <figure className="m-0">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="block w-full cursor-zoom-in overflow-hidden rounded-lg border border-slate bg-cream hover:border-forest"
+      >
+        <span className="sr-only">Enlarge screenshot {index + 1}: </span>
+        {url ? (
+          <img
+            src={url}
+            alt={imageAlt(image, index)}
+            width={image.width || undefined}
+            height={image.height || undefined}
+            className="mx-auto block h-auto max-h-[70vh] w-auto max-w-full object-contain"
+          />
+        ) : (
+          <span className="block p-10 text-center text-sm text-slate">Loading screenshot {index + 1}…</span>
+        )}
+      </button>
+      <figcaption aria-hidden="true" className="mt-2 text-[0.8125rem] text-slate">
+        Screenshot {index + 1}: {image.alt.trim() || <em>No description yet.</em>}
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Screenshots for an issue: small thumbnails in lists, or large images (`large`) in the issue view. */
+export default function IssueImageGallery({ issue, large = false }: { issue: Issue; large?: boolean }) {
   const [open, setOpen] = useState<number | null>(null)
   if (!issue.images.length) return null
   return (
     <>
-      <ul
-        aria-label={`Screenshots for issue #${issue.number}`}
-        className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0"
-      >
-        {issue.images.map((img, i) => (
-          <li key={img.id}>
-            <ThumbButton image={img} index={i} onOpen={() => setOpen(i)} />
-          </li>
-        ))}
-      </ul>
+      {large ? (
+        <ul aria-label={`Screenshots for issue #${issue.number}`} className="m-0 grid list-none gap-6 p-0">
+          {issue.images.map((img, i) => (
+            <li key={img.id}>
+              <LargeImage image={img} index={i} onOpen={() => setOpen(i)} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul
+          aria-label={`Screenshots for issue #${issue.number}`}
+          className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0"
+        >
+          {issue.images.map((img, i) => (
+            <li key={img.id}>
+              <ThumbButton image={img} index={i} onOpen={() => setOpen(i)} />
+            </li>
+          ))}
+        </ul>
+      )}
       {open !== null && issue.images[open] && (
         <Viewer issue={issue} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
       )}

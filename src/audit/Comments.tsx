@@ -5,13 +5,16 @@ import type { AuditPage, Issue } from './types'
 import { useConfirm } from './ui/ConfirmDialog'
 import { button, input, label } from './ui/styles'
 
-type Props = { page: AuditPage; issue?: Issue }
+type Props = { page: AuditPage; issue?: Issue; expanded?: boolean }
 
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
-/** Comment thread on an issue (collapsible) or on the page itself. Viewers and the owner can post. */
-export default function Comments({ page, issue }: Props) {
+/**
+ * Comment thread on an issue (collapsible, or a full section when `expanded`) or on the page itself.
+ * Viewers and the owner can post.
+ */
+export default function Comments({ page, issue, expanded = false }: Props) {
   const id = useId()
   const data = useAuditData()
   const { session } = useAuth()
@@ -127,6 +130,17 @@ export default function Comments({ page, issue }: Props) {
       {confirmDialog}
     </>
   )
+
+  if (issue && expanded) {
+    return (
+      <section aria-labelledby={`${id}-heading`} className="mt-8">
+        <h2 id={`${id}-heading`} className="m-0 font-serif text-xl">
+          Comments <span className="text-slate">({comments.length})</span>
+        </h2>
+        <div className="max-w-3xl text-[0.875rem]">{thread}</div>
+      </section>
+    )
+  }
 
   if (issue) {
     return (

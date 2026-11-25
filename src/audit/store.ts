@@ -453,14 +453,38 @@ export async function updateIssueStatus(id: string, status: Issue['status']) {
   })
 }
 
-export async function deleteIssue(id: string) {
+/** `beforeRemove` runs after the delete succeeds, before the issue leaves the store (e.g. to leave its view). */
+export async function deleteIssue(id: string, beforeRemove?: () => void) {
   const issue = state.issues.find((i) => i.id === id)
   check(await db().from('issues').delete().eq('id', id), 'delete the issue')
+  beforeRemove?.()
   commit({
     issues: state.issues.filter((i) => i.id !== id),
     comments: state.comments.filter((c) => c.issueId !== id),
   })
   await removeObjects(issue?.images.map((img) => img.path) ?? []).catch(() => undefined)
+}
+
+/**
+ * Moves an issue to another page of the same project. It keeps its number, screenshots and comments.
+ * `beforeMove` runs once the database has moved it, before the store changes (e.g. to follow it to its new page).
+ */
+export async function moveIssueToPage(
+  issue: Issue,
+  page: AuditPage,
+  beforeMove?: (moved: Issue) => void,
+): Promise<Issue> {
+  const row = check<Row | null>(
+    await db().from('issues').update({ page_id: page.id }).eq('id', issue.id).select().single(),
+    'move the issue',
+  )
+  const moved = toIssue(row!, issue.images)
+  beforeMove?.(moved)
+  commit({
+    issues: state.issues.map((i) => (i.id === issue.id ? moved : i)),
+    comments: state.comments.map((c) => (c.issueId === issue.id ? { ...c, pageId: page.id } : c)),
+  })
+  return moved
 }
 
 /**

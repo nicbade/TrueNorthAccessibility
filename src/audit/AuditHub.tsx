@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Logo from '../components/Logo'
 import ThemeToggle, { type Theme } from '../components/ThemeToggle'
+import IssueView from './IssueView'
 import PageView from './PageView'
 import ProjectsView from './ProjectsView'
 import ProjectView from './ProjectView'
@@ -32,13 +33,22 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const ready = auth.status === 'signed-in' && data.status === 'ready'
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
+  const lastIssueId = useRef<string | null>(null)
 
   const project = route.view !== 'projects' ? data.projects.find((p) => p.id === route.projectId) : undefined
   const page =
-    route.view === 'page'
+    route.view === 'page' || route.view === 'issue'
       ? data.pages.find((p) => p.id === route.pageId && p.projectId === route.projectId)
       : undefined
-  const missing = ready && ((route.view !== 'projects' && !project) || (route.view === 'page' && !page))
+  const issue =
+    route.view === 'issue'
+      ? data.issues.find((i) => i.id === route.issueId && i.pageId === route.pageId)
+      : undefined
+  const missing =
+    ready &&
+    ((route.view !== 'projects' && !project) ||
+      ((route.view === 'page' || route.view === 'issue') && !page) ||
+      (route.view === 'issue' && !issue))
 
   const title = !supabaseConfigured
     ? 'Not configured'
@@ -46,7 +56,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
       ? 'Sign in'
       : missing
         ? 'Not found'
-        : (page?.name ?? project?.name ?? 'Audit projects')
+        : issue
+          ? `Issue #${issue.number}: ${issue.description}`
+          : (page?.name ?? project?.name ?? 'Audit projects')
 
   useEffect(() => {
     if (userId) void loadHubData(userId)
@@ -66,8 +78,20 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   }, [])
 
   useEffect(() => {
+    const fromIssue = lastIssueId.current
+    lastIssueId.current = route.view === 'issue' ? route.issueId : null
     if (firstRender.current) {
       firstRender.current = false
+      return
+    }
+    // Coming back from an issue to its page, return focus to that issue in the list.
+    const issueLink =
+      route.view === 'page' && fromIssue
+        ? mainRef.current?.querySelector<HTMLElement>(`[data-issue-link="${CSS.escape(fromIssue)}"]`)
+        : null
+    if (issueLink) {
+      issueLink.focus()
+      issueLink.closest('article')?.scrollIntoView({ block: 'center' })
       return
     }
     mainRef.current?.querySelector<HTMLElement>('h1')?.focus()
@@ -77,6 +101,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
   const crumbs: { label: string; href: string }[] = [{ label: 'Projects', href: hrefFor.projects() }]
   if (project) crumbs.push({ label: project.name, href: hrefFor.project(project.id) })
   if (project && page) crumbs.push({ label: page.name, href: hrefFor.page(project.id, page.id) })
+  if (project && page && issue) {
+    crumbs.push({ label: `Issue #${issue.number}`, href: hrefFor.issue(project.id, page.id, issue.id) })
+  }
 
   return (
     <div className="min-h-screen bg-cream font-sans text-ink">
@@ -200,13 +227,15 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
               Not found
             </h1>
             <p className="mt-2">
-              That project or page does not exist in this browser.{' '}
+              That project, page or issue does not exist, or you don't have access to it.{' '}
               <a href={hrefFor.projects()} className={link}>
                 Return to all projects
               </a>
               .
             </p>
           </div>
+        ) : route.view === 'issue' && project && page && issue ? (
+          <IssueView key={issue.id} project={project} page={page} issue={issue} />
         ) : route.view === 'page' && project && page ? (
           <PageView key={page.id} project={project} page={page} />
         ) : route.view === 'project' && project ? (

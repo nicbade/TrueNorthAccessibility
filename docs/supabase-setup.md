@@ -184,6 +184,18 @@ screenshots or comments, and the page drops out of their metrics and exports. Th
 just the interface. You still see the page, marked **Hidden**. Your Excel export also leaves hidden pages out
 unless you tick **Include hidden pages in export**.
 
+**Issue view:** click an issue's title, or **Open full view**, to open it on its own page with large
+screenshots (select one to enlarge), all details, comments, **Previous issue / Next issue** and **Back to** the
+page. The address can be bookmarked or shared with anyone who has access. Viewers see the same view without the
+edit controls. As owner you can also change the status, **Edit issue**, **Copy to a page**, **Move to page…**
+and **Delete issue** there.
+
+**Moving an issue:** **Move to page…** (in the issue view, or **Move** on the page's issue list) moves the issue
+to another page of the same project. It keeps its number, screenshots and comments and disappears from the
+original page. This needs the `20261124210000_move_issue.sql` migration. Without it, moving an issue that has
+comments fails with a "violates foreign key constraint" error. **Copy** instead makes a new issue with the next
+number and leaves the original where it is.
+
 Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
 the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.
 
