@@ -209,9 +209,19 @@ issues on hidden pages. As owner you can change the status, edit, move and delet
 
 **Searching issues:** the **Search issues** box on the project dashboard searches every page of the project
 by issue number (`#12` or `12`), description, expected behavior, how to fix, auditor notes, location,
-category and WCAG criterion (number or name). Results are grouped by page with the matching words
+component name, category and WCAG criterion (number or name). Results are grouped by page with the matching words
 highlighted, and can be narrowed with the **Severity** and **Status** buttons. The address keeps the search
 and filters, so it can be bookmarked or shared. Viewers never see issues on hidden pages in the results.
+
+**Components:** the **Components** section of the project dashboard lists the shared parts of the site
+(header, footer, cart drawer…) with their issue and open counts. As owner, **Add component** creates one (a
+name, unique in the project, and an optional description); **Edit** renames it or changes the description, and
+**Delete** removes it after a confirmation. Deleting a component keeps its issues and only detaches them. Attach
+an issue by choosing the component in the **Component** field when adding or editing it. Each component name
+links to its own page (`#/projects/<id>/components/<component id>`, bookmarkable) listing every attached issue
+grouped by page. Issue cards, the issue view and the Excel export (**Component** column) show the component,
+and copying or moving an issue keeps it. Viewers see components and their pages but not issues on hidden
+pages, and cannot change components. This needs the `20261125170000_issue_components.sql` migration.
 
 Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
 the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.
