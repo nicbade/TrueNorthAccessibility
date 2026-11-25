@@ -107,6 +107,8 @@ export type Component = {
   projectId: string
   name: string
   description: string
+  /** Screenshots of the component; alt text is required. */
+  images: IssueImage[]
   createdAt: string
   updatedAt: string
 }

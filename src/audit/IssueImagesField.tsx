@@ -8,6 +8,13 @@ type Props = {
   pending: Map<string, Blob>
   onChange: (images: IssueImage[]) => void
   onAnnounce: (message: string) => void
+  legend?: string
+  /** What the images are saved with, e.g. "the issue". */
+  saveWith?: string
+  /** Every screenshot needs alt text (component screenshots). */
+  altRequired?: boolean
+  /** Screenshots whose missing alt text should be flagged. */
+  invalidIds?: string[]
 }
 
 function Thumb({ image, blob }: { image: IssueImage; blob?: Blob }) {
@@ -42,7 +49,16 @@ export async function addFiles(
   return { images: [...images, ...added], added, skipped }
 }
 
-export default function IssueImagesField({ images, pending, onChange, onAnnounce }: Props) {
+export default function IssueImagesField({
+  images,
+  pending,
+  onChange,
+  onAnnounce,
+  legend = 'Issue screenshots',
+  saveWith = 'the issue',
+  altRequired = false,
+  invalidIds = [],
+}: Props) {
   const id = useId()
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -85,7 +101,7 @@ export default function IssueImagesField({ images, pending, onChange, onAnnounce
 
   return (
     <fieldset className="m-0 min-w-0 rounded-lg border border-divider p-4 sm:col-span-2">
-      <legend className="px-1 text-[0.8125rem] font-semibold text-ink">Issue screenshots</legend>
+      <legend className="px-1 text-[0.8125rem] font-semibold text-ink">{legend}</legend>
       <div
         onDragOver={(e) => {
           e.preventDefault()
@@ -117,7 +133,8 @@ export default function IssueImagesField({ images, pending, onChange, onAnnounce
         </button>
         <p id={`${id}-hint`} className={`${hint} m-0 flex-1`}>
           Drag and drop images here, or paste from the clipboard (Ctrl+V or ⌘V) while focus is in this form.
-          Images are stored privately in Supabase when you save the issue.
+          Images are stored privately in Supabase when you save {saveWith}.
+          {altRequired && ' Each screenshot needs alt text.'}
         </p>
       </div>
       {error && (
@@ -127,33 +144,60 @@ export default function IssueImagesField({ images, pending, onChange, onAnnounce
       )}
       {images.length > 0 && (
         <ul className="m-0 mt-3 grid list-none gap-3 p-0">
-          {images.map((img, i) => (
-            <li
-              key={img.id}
-              className="flex flex-wrap items-start gap-3 rounded-lg border border-divider bg-surface p-3"
-            >
-              <Thumb image={img} blob={pending.get(img.id)} />
-              <div className="min-w-48 flex-1">
-                <label htmlFor={`${id}-alt-${img.id}`} className={label}>
-                  Alt text <span className="sr-only">for screenshot {i + 1}</span>
-                </label>
-                <input
-                  id={`${id}-alt-${img.id}`}
-                  className={input}
-                  value={img.alt}
-                  placeholder="Describe what the screenshot shows"
-                  onChange={(e) => update(i, e.target.value)}
-                  aria-describedby={`${id}-meta-${img.id}`}
-                />
-                <p id={`${id}-meta-${img.id}`} className={`${hint} break-all`}>
-                  Screenshot {i + 1}: {img.name} · {img.width}×{img.height}px
-                </p>
-              </div>
-              <button type="button" className={button('ghost', 'text-danger-text')} onClick={() => remove(i)}>
-                Remove<span className="sr-only"> screenshot {i + 1}</span>
-              </button>
-            </li>
-          ))}
+          {images.map((img, i) => {
+            const invalid = invalidIds.includes(img.id)
+            return (
+              <li
+                key={img.id}
+                className="flex flex-wrap items-start gap-3 rounded-lg border border-divider bg-surface p-3"
+              >
+                <Thumb image={img} blob={pending.get(img.id)} />
+                <div className="min-w-48 flex-1">
+                  <label htmlFor={`${id}-alt-${img.id}`} className={label}>
+                    Alt text <span className="sr-only">for screenshot {i + 1}</span>
+                    {altRequired && (
+                      <>
+                        {' '}
+                        <span aria-hidden="true" className="text-danger-text">
+                          *
+                        </span>
+                      </>
+                    )}
+                  </label>
+                  <input
+                    id={`${id}-alt-${img.id}`}
+                    data-image-alt={img.id}
+                    className={input}
+                    value={img.alt}
+                    placeholder="Describe what the screenshot shows"
+                    onChange={(e) => update(i, e.target.value)}
+                    required={altRequired || undefined}
+                    aria-required={altRequired || undefined}
+                    aria-invalid={invalid || undefined}
+                    aria-describedby={`${invalid ? `${id}-alt-error-${img.id} ` : ''}${id}-meta-${img.id}`}
+                  />
+                  {invalid && (
+                    <p
+                      id={`${id}-alt-error-${img.id}`}
+                      className="m-0 mt-1 text-[0.75rem] font-semibold text-danger-text"
+                    >
+                      Describe screenshot {i + 1}.
+                    </p>
+                  )}
+                  <p id={`${id}-meta-${img.id}`} className={`${hint} break-all`}>
+                    Screenshot {i + 1}: {img.name} · {img.width}×{img.height}px
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={button('ghost', 'text-danger-text')}
+                  onClick={() => remove(i)}
+                >
+                  Remove<span className="sr-only"> screenshot {i + 1}</span>
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </fieldset>

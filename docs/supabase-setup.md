@@ -222,6 +222,17 @@ links to its own page (`#/projects/<id>/components/<component id>`, bookmarkable
 grouped by page. Issue cards, the issue view and the Excel export (**Component** column) show the component,
 and copying or moving an issue keeps it. Viewers see components and their pages but not issues on hidden
 pages, and cannot change components. This needs the `20261125170000_issue_components.sql` migration.
+The Components section is always shown on the dashboard, with a short note when there are none yet.
+
+**Creating a component from an issue:** in the issue form's **Component** list, choose **+ New component…**
+(owners only). A small dialog asks for the name, an optional description and screenshots; saving adds the
+component and selects it on the issue, and **Cancel** leaves the previous choice. The rest of the issue form
+is kept.
+
+**Component screenshots:** add screenshots in the **Add component** / **Edit component** dialog or with **Add
+screenshots** on the component's page. Each screenshot needs alt text. They show on the component's page and
+open full size when clicked. Removing a screenshot, or deleting the component, deletes the files. Viewers can
+see them but not change them. This needs the `20261125180000_component_images.sql` migration.
 
 Database changes for these features are in `supabase/migrations/`. The GitHub integration applies them when
 the pull request is merged into `master`. Without the integration, run the new migration file in the SQL editor.

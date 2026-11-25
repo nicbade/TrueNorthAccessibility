@@ -151,7 +151,9 @@ const describedBy = (loc) =>
       .join(' '),
   )
 const groupHeadings = async (page) =>
-  (await main(page).getByRole('heading', { level: 2 }).allInnerTexts()).map((t) => t.trim())
+  (await main(page).getByRole('heading', { level: 2 }).allInnerTexts())
+    .map((t) => t.trim())
+    .filter((t) => !t.startsWith('Screenshots'))
 
 // ─── Owner ───
 const { ctx: oc, page: o } = await session(OWNER)
@@ -187,9 +189,10 @@ await click(o.getByRole('button', { name: 'Add component' }))
 form = o.getByRole('dialog', { name: 'Add component' })
 await form.getByLabel('Component name').fill('site HEADER')
 await click(form.getByRole('button', { name: 'Add component' }))
+await form.getByText('already has a component named').waitFor()
 expect(
-  (await form.getByRole('alert').innerText()).includes('already has a component with that name'),
-  'duplicate names (ignoring case) are refused with a clear message',
+  (await form.getByLabel('Component name').getAttribute('aria-invalid')) === 'true',
+  'duplicate names (ignoring case) are refused with a clear inline message',
 )
 await click(form.getByRole('button', { name: 'Cancel' }))
 const comps = await one(api.from('components').select('id, name, description').eq('project_id', project.id))
@@ -218,7 +221,10 @@ const addForm = o.getByRole('dialog', { name: 'Add issue' })
 await addForm.getByLabel('Description').fill('Search button has no accessible name')
 const addSelect = addForm.getByRole('combobox', { name: 'Component' })
 const options = (await addSelect.locator('option').allInnerTexts()).map((t) => t.trim())
-expect(options.join('|') === 'None|Date picker|Site footer|Site header', 'Component select lists None and the components')
+expect(
+  options.join('|') === 'None|Date picker|Site footer|Site header|+ New component…',
+  'Component select lists None, the components and + New component…',
+)
 expect((await addSelect.inputValue()) === '', 'Component defaults to None')
 expect((await describedBy(addSelect)).includes('component page lists every attached issue'), 'Component select has a hint')
 await addSelect.selectOption({ label: 'Site header' })

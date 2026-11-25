@@ -436,10 +436,10 @@ export default function ProjectView({ project }: Props) {
         <ComponentForm
           component={componentForm.component}
           onClose={() => setComponentForm(null)}
-          onSubmit={async (input) => {
+          onSubmit={async (input, images, pending) => {
             const existing = componentForm.component
-            if (existing) await updateComponent(existing.id, input)
-            else await createComponent(project.id, input)
+            if (existing) await updateComponent(existing.id, input, images, pending)
+            else await createComponent(project.id, input, images, pending)
             setComponentForm(null)
             setStatus(`Component "${input.name}" ${existing ? 'saved' : 'added'}.`)
           }}

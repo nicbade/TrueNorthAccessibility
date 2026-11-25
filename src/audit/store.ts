@@ -157,11 +157,12 @@ export const fromIssueDraft = (d: Omit<IssueDraft, 'images'>) => ({
   common_issue_id: d.commonIssueId,
 })
 
-const toComponent = (r: Row): Component => ({
+const toComponent = (r: Row, images: IssueImage[]): Component => ({
   id: r.id,
   projectId: r.project_id,
   name: r.name,
   description: r.description,
+  images,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 })
@@ -190,25 +191,33 @@ export async function loadHubData(userId: string) {
   if (state.userId !== userId || state.status !== 'ready') commit({ ...EMPTY, status: 'loading', userId })
   try {
     const client = db()
-    const [owners, projects, pages, components, issues, images, viewers, comments] = await Promise.all([
-      client.from('app_owners').select('user_id').eq('user_id', userId),
-      client.from('projects').select('*').order('updated_at', { ascending: false }),
-      client.from('pages').select('*').order('created_at'),
-      client.from('components').select('*').order('name'),
-      client.from('issues').select('*').order('number'),
-      client.from('issue_images').select('*').order('position'),
-      client.from('project_viewers').select('*').order('created_at'),
-      client.from('comments').select('*').order('created_at'),
-    ])
+    const [owners, projects, pages, components, componentImages, issues, images, viewers, comments] =
+      await Promise.all([
+        client.from('app_owners').select('user_id').eq('user_id', userId),
+        client.from('projects').select('*').order('updated_at', { ascending: false }),
+        client.from('pages').select('*').order('created_at'),
+        client.from('components').select('*').order('name'),
+        client.from('component_images').select('*').order('position'),
+        client.from('issues').select('*').order('number'),
+        client.from('issue_images').select('*').order('position'),
+        client.from('project_viewers').select('*').order('created_at'),
+        client.from('comments').select('*').order('created_at'),
+      ])
     const imageRows = check(images, 'load issue images') ?? []
     const byIssue = new Map<string, IssueImage[]>()
     imageRows.forEach((r: Row) => byIssue.set(r.issue_id, [...(byIssue.get(r.issue_id) ?? []), toImage(r)]))
+    const byComponent = new Map<string, IssueImage[]>()
+    ;(check(componentImages, 'load component screenshots') ?? []).forEach((r: Row) =>
+      byComponent.set(r.component_id, [...(byComponent.get(r.component_id) ?? []), toImage(r)]),
+    )
     commit({
       status: 'ready',
       isOwner: (check(owners, 'check your access') ?? []).length > 0,
       projects: (check(projects, 'load projects') ?? []).map(toProject),
       pages: (check(pages, 'load pages') ?? []).map(toPage),
-      components: (check(components, 'load components') ?? []).map(toComponent),
+      components: (check(components, 'load components') ?? []).map((r: Row) =>
+        toComponent(r, byComponent.get(r.id) ?? []),
+      ),
       issues: (check(issues, 'load issues') ?? []).map((r: Row) => toIssue(r, byIssue.get(r.id) ?? [])),
       viewers: (check(viewers, 'load viewers') ?? []).map(toViewer),
       comments: (check(comments, 'load comments') ?? []).map(toComment),
@@ -249,6 +258,7 @@ export async function deleteProject(id: string) {
   const paths = [
     ...state.pages.filter((p) => p.projectId === id).map((p) => p.screenshot?.path ?? ''),
     ...state.issues.filter((i) => i.projectId === id).flatMap((i) => i.images.map((img) => img.path)),
+    ...state.components.filter((c) => c.projectId === id).flatMap((c) => c.images.map((img) => img.path)),
   ]
   check(await db().from('projects').delete().eq('id', id), 'delete the project')
   commit({
@@ -375,14 +385,87 @@ export type ComponentInput = Pick<Component, 'name' | 'description'>
 const byName = (a: Component, b: Component) =>
   a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
 
+/** The project already has a component with this name (names are compared ignoring case). */
+export class DuplicateComponentNameError extends SaveError {}
+
 function componentError(e: unknown, action: string): never {
   if (e instanceof SaveError && /components_project_name_unique|duplicate key/.test(e.message)) {
-    throw new SaveError(`Could not ${action}: this project already has a component with that name.`)
+    throw new DuplicateComponentNameError(
+      `Could not ${action}: this project already has a component with that name.`,
+    )
   }
   throw e
 }
 
-export async function createComponent(projectId: string, input: ComponentInput): Promise<Component> {
+/**
+ * Uploads new screenshots (blobs keyed by image id), saves their rows in order and removes dropped ones,
+ * like an issue's screenshots.
+ */
+async function saveComponentImages(
+  component: Component,
+  images: IssueImage[],
+  pending: Map<string, Blob>,
+): Promise<IssueImage[]> {
+  const client = db()
+  const saved: IssueImage[] = []
+  for (const img of images) {
+    const blob = pending.get(img.id)
+    const path =
+      img.path || `${component.projectId}/components/${component.id}/${img.id}.${extensionFor(img.type)}`
+    if (blob) await uploadObject(path, blob, img.type)
+    saved.push({ ...img, alt: img.alt.trim(), path })
+  }
+  const keep = new Set(saved.map((img) => img.id))
+  const dropped = component.images.filter((img) => !keep.has(img.id))
+  if (dropped.length) {
+    check(
+      await client
+        .from('component_images')
+        .delete()
+        .in(
+          'id',
+          dropped.map((img) => img.id),
+        ),
+      'remove screenshots',
+    )
+  }
+  if (saved.length) {
+    check(
+      await client.from('component_images').upsert(
+        saved.map((img, position) => ({
+          id: img.id,
+          component_id: component.id,
+          project_id: component.projectId,
+          position,
+          storage_path: img.path,
+          name: img.name,
+          type: img.type,
+          size: img.size,
+          width: img.width,
+          height: img.height,
+          alt: img.alt,
+        })),
+      ),
+      'save screenshots',
+    )
+  }
+  await removeObjects(dropped.map((img) => img.path)).catch(() => undefined)
+  return saved
+}
+
+function commitComponent(component: Component) {
+  commit({
+    components: [...state.components.filter((c) => c.id !== component.id), component].sort(byName),
+  })
+}
+
+export async function createComponent(
+  projectId: string,
+  input: ComponentInput,
+  images: IssueImage[] = [],
+  pending = new Map<string, Blob>(),
+): Promise<Component> {
+  let component: Component
   try {
     const row = check(
       await db()
@@ -392,15 +475,26 @@ export async function createComponent(projectId: string, input: ComponentInput):
         .single(),
       'add the component',
     )
-    const component = toComponent(row)
-    commit({ components: [...state.components, component].sort(byName) })
-    return component
+    component = toComponent(row, [])
   } catch (e) {
     componentError(e, 'add the component')
   }
+  commitComponent(component)
+  if (images.length) {
+    component = { ...component, images: await saveComponentImages(component, images, pending) }
+    commitComponent(component)
+  }
+  return component
 }
 
-export async function updateComponent(id: string, input: ComponentInput) {
+export async function updateComponent(
+  id: string,
+  input: ComponentInput,
+  images?: IssueImage[],
+  pending = new Map<string, Blob>(),
+) {
+  const existing = state.components.find((c) => c.id === id)!
+  let component: Component
   try {
     const row = check(
       await db()
@@ -411,23 +505,34 @@ export async function updateComponent(id: string, input: ComponentInput) {
         .single(),
       'save the component',
     )
-    commit({ components: state.components.map((c) => (c.id === id ? toComponent(row) : c)).sort(byName) })
+    component = toComponent(row, existing.images)
   } catch (e) {
     componentError(e, 'save the component')
   }
+  if (images) component = { ...component, images: await saveComponentImages(component, images, pending) }
+  commitComponent(component)
+}
+
+/** Saves only the component's screenshots (adding, describing, reordering or removing them). */
+export async function updateComponentImages(id: string, images: IssueImage[], pending: Map<string, Blob>) {
+  const existing = state.components.find((c) => c.id === id)!
+  commitComponent({ ...existing, images: await saveComponentImages(existing, images, pending) })
 }
 
 /**
- * The database detaches the component's issues (component_id becomes null); they are not deleted.
- * `beforeRemove` runs after the delete succeeds, before the component leaves the store (e.g. to leave its view).
+ * The database detaches the component's issues (component_id becomes null); they are not deleted. Its
+ * screenshots are deleted with it. `beforeRemove` runs after the delete succeeds, before the component leaves
+ * the store (e.g. to leave its view).
  */
 export async function deleteComponent(id: string, beforeRemove?: () => void) {
+  const paths = state.components.find((c) => c.id === id)?.images.map((img) => img.path) ?? []
   check(await db().from('components').delete().eq('id', id), 'delete the component')
   beforeRemove?.()
   commit({
     components: state.components.filter((c) => c.id !== id),
     issues: state.issues.map((i) => (i.componentId === id ? { ...i, componentId: null } : i)),
   })
+  await removeObjects(paths).catch(() => undefined)
 }
 
 // ─── Issues ────────────────────────────────────────────────────────────────

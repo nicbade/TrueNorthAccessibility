@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import ComponentForm, { deleteComponentConfirm } from './ComponentForm'
+import { ImageGallery } from './IssueImageGallery'
 import IssueGroups, { groupByPage, plural } from './IssueGroups'
 import { hrefFor, navigate } from './router'
-import { deleteComponent, updateComponent, useAuditData } from './store'
+import { deleteComponent, updateComponent, updateComponentImages, useAuditData } from './store'
 import { RESOLVED_STATUSES, type Component, type Project } from './types'
 import { useConfirm } from './ui/ConfirmDialog'
 import { button, card, link } from './ui/styles'
@@ -14,7 +15,7 @@ export default function ComponentView({ project, component }: Props) {
   const data = useAuditData()
   const { isOwner } = data
   const [confirm, confirmDialog] = useConfirm()
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState<'all' | 'screenshots' | null>(null)
   const [status, setStatus] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -51,7 +52,7 @@ export default function ComponentView({ project, component }: Props) {
         </div>
         {isOwner && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={button('secondary')} onClick={() => setEditing(true)}>
+            <button type="button" className={button('secondary')} onClick={() => setEditing('all')}>
               Edit component
             </button>
             <button type="button" className={button('danger')} onClick={() => void remove()}>
@@ -78,6 +79,41 @@ export default function ComponentView({ project, component }: Props) {
         </p>
       )}
 
+      <section aria-labelledby="component-shots-heading" className="mt-8">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-divider pb-2">
+          <h2 id="component-shots-heading" className="m-0 font-serif text-xl">
+            Screenshots{' '}
+            <span className="font-sans text-[0.875rem] text-slate">({component.images.length})</span>
+          </h2>
+          {isOwner && (
+            <button type="button" className={button('secondary')} onClick={() => setEditing('screenshots')}>
+              {component.images.length ? (
+                'Add or edit screenshots'
+              ) : (
+                <>
+                  <span aria-hidden="true">+</span> Add screenshots
+                </>
+              )}
+            </button>
+          )}
+        </div>
+        {component.images.length ? (
+          <ImageGallery
+            images={component.images}
+            label={component.name}
+            missingAlt="None yet."
+            large
+            className="md:grid-cols-2"
+          />
+        ) : (
+          <p className="m-0 text-[0.875rem] text-slate">
+            {isOwner
+              ? 'No screenshots yet. Add screenshots so clients can see which part of the site this is.'
+              : 'No screenshots of this component yet.'}
+          </p>
+        )}
+      </section>
+
       {attached.length === 0 && (
         <div className={`${card} mt-6 p-8 text-center`}>
           <p className="m-0 text-[0.9375rem]">No issues are attached to this component yet.</p>
@@ -93,11 +129,13 @@ export default function ComponentView({ project, component }: Props) {
       {editing && (
         <ComponentForm
           component={component}
-          onClose={() => setEditing(false)}
-          onSubmit={async (input) => {
-            await updateComponent(component.id, input)
-            setEditing(false)
-            setStatus('Component saved.')
+          mode={editing}
+          onClose={() => setEditing(null)}
+          onSubmit={async (input, images, pending) => {
+            if (editing === 'screenshots') await updateComponentImages(component.id, images, pending)
+            else await updateComponent(component.id, input, images, pending)
+            setEditing(null)
+            setStatus(editing === 'screenshots' ? 'Screenshots saved.' : 'Component saved.')
           }}
         />
       )}

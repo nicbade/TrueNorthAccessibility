@@ -43,6 +43,8 @@ export default function Dialog({
       aria-describedby={description ? descId : undefined}
       onCancel={(e) => {
         e.preventDefault()
+        // A dialog opened from inside another must not close its parent too.
+        e.stopPropagation()
         onClose()
       }}
       className={`m-auto w-[calc(100%-2rem)] ${size === 'lg' ? 'max-w-4xl' : 'max-w-xl'} max-h-[calc(100dvh-2rem)] overflow-hidden rounded-xl bg-cream p-0 text-ink shadow-2xl backdrop:bg-black/60`}
