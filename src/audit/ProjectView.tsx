@@ -176,13 +176,21 @@ export default function ProjectView({ project }: Props) {
               label: c.key,
               count: c.count,
               barClass: PRIORITY_BAR[c.key] ?? 'bg-slate-400',
+              href: hrefFor.issues(project.id, 'severity', c.key),
+              linkId: `severity:${c.key}`,
             }))}
           />
           <MetricTable
             title="By status"
             labelHeader="Status"
             total={m.total}
-            rows={m.byStatus.map((c) => ({ key: c.key, label: c.key, count: c.count }))}
+            rows={m.byStatus.map((c) => ({
+              key: c.key,
+              label: c.key,
+              count: c.count,
+              href: hrefFor.issues(project.id, 'status', c.key),
+              linkId: `status:${c.key}`,
+            }))}
           />
           <MetricTable
             title="By WCAG criterion"

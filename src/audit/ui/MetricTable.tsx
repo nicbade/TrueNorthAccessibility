@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react'
-import { card } from './styles'
+import { card, link } from './styles'
 
-type Row = { key: string; label: ReactNode; count: number; barClass?: string }
+type Row = {
+  key: string
+  label: ReactNode
+  count: number
+  barClass?: string
+  /** Links the label to a list of these issues; `linkId` lets focus return to it. */
+  href?: string
+  linkId?: string
+}
 
 type Props = {
   title: string
@@ -44,7 +52,18 @@ export default function MetricTable({
             {rows.map((r) => (
               <tr key={r.key} className="border-t border-divider">
                 <th scope="row" className="py-1.5 pr-3 text-left font-normal text-ink">
-                  {r.label}
+                  {r.href ? (
+                    <a
+                      href={r.href}
+                      aria-label={`${r.key} issues (${r.count})`}
+                      data-filter-link={r.linkId}
+                      className={`rounded ${link}`}
+                    >
+                      {r.label}
+                    </a>
+                  ) : (
+                    r.label
+                  )}
                 </th>
                 <td className="py-1.5 pr-3" aria-hidden="true">
                   <div className="h-2 w-full rounded-full bg-cream">

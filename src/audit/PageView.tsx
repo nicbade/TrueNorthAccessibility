@@ -1,10 +1,9 @@
 import { useId, useMemo, useState } from 'react'
 import { PRIORITIES } from '../data/commonIssues'
-import { getWcag } from '../data/wcag'
 import Comments from './Comments'
 import CopyIssueDialog from './CopyIssueDialog'
+import IssueCard from './IssueCard'
 import IssueForm from './IssueForm'
-import IssueImageGallery from './IssueImageGallery'
 import MoveIssueDialog from './MoveIssueDialog'
 import PageForm from './PageForm'
 import { hrefFor, navigate } from './router'
@@ -102,6 +101,13 @@ export default function PageView({ project, page }: Props) {
     } catch (e) {
       setAnnouncement(e instanceof Error ? e.message : 'Could not delete the issue.')
     }
+  }
+
+  const changeStatus = (issue: Issue, next: IssueStatus) => {
+    updateIssueStatus(issue.id, next).then(
+      () => setAnnouncement(`Issue #${issue.number} marked ${next}.`),
+      (err) => setAnnouncement(err instanceof Error ? err.message : 'Could not update the status.'),
+    )
   }
 
   return (
@@ -249,122 +255,15 @@ export default function PageView({ project, page }: Props) {
               <ol className="m-0 mt-2 grid list-none gap-3 p-0">
                 {visible.map((issue) => (
                   <li key={issue.id}>
-                    <article className={`${card} p-4`} aria-labelledby={`${id}-i-${issue.id}`}>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[0.75rem] font-bold text-slate">#{issue.number}</span>
-                        {issue.priority && (
-                          <Badge kind="priority" value={issue.priority} srPrefix="Priority" />
-                        )}
-                        <Badge kind="status" value={issue.status} srPrefix="Status" />
-                        {issue.category && (
-                          <Badge kind="neutral" value={issue.category} srPrefix="Category" />
-                        )}
-                        <a
-                          href={hrefFor.issue(project.id, page.id, issue.id)}
-                          className={button('secondary', 'ml-auto px-2.5 py-1 text-[0.75rem]')}
-                        >
-                          <span aria-hidden="true">⤢ </span>Open full view
-                          <span className="sr-only"> of issue #{issue.number}</span>
-                        </a>
-                      </div>
-                      <h3
-                        id={`${id}-i-${issue.id}`}
-                        className="m-0 mt-2 font-sans text-[0.9375rem] font-semibold leading-6"
-                      >
-                        <a
-                          href={hrefFor.issue(project.id, page.id, issue.id)}
-                          data-issue-link={issue.id}
-                          className="rounded text-ink underline decoration-slate underline-offset-4 hover:text-forest hover:decoration-forest"
-                        >
-                          <span className="sr-only">Issue {issue.number}: </span>
-                          {issue.description}
-                        </a>
-                      </h3>
-                      {issue.location && (
-                        <p className="m-0 mt-1 text-[0.75rem] text-slate">
-                          <span className="font-semibold">Location:</span> {issue.location}
-                        </p>
-                      )}
-                      {issue.wcag.length > 0 && (
-                        <p className="m-0 mt-1 text-[0.75rem] text-slate">
-                          <span className="font-semibold">WCAG:</span>{' '}
-                          {issue.wcag.map((w) => (getWcag(w) ? `${w} ${getWcag(w)!.name}` : w)).join('; ')}
-                        </p>
-                      )}
-                      <IssueImageGallery issue={issue} />
-                      {(issue.expectedBehavior || issue.fix) && (
-                        <details className="mt-2 text-[0.8125rem]">
-                          <summary className="cursor-pointer font-semibold text-forest">
-                            Expected behavior and fix
-                          </summary>
-                          {issue.expectedBehavior && (
-                            <p className="mb-0 mt-2 whitespace-pre-line">
-                              <span className="font-semibold">Expected:</span> {issue.expectedBehavior}
-                            </p>
-                          )}
-                          {issue.fix && (
-                            <p className="mb-0 mt-2 whitespace-pre-line">
-                              <span className="font-semibold">Fix:</span> {issue.fix}
-                            </p>
-                          )}
-                        </details>
-                      )}
-                      <Comments page={page} issue={issue} />
-                      {isOwner && (
-                        <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-divider pt-3">
-                          <div className="flex items-center gap-2">
-                            <label
-                              htmlFor={`${id}-st-${issue.id}`}
-                              className="text-[0.75rem] font-semibold text-slate"
-                            >
-                              Status<span className="sr-only"> for issue #{issue.number}</span>
-                            </label>
-                            <select
-                              id={`${id}-st-${issue.id}`}
-                              className={`${input} w-auto py-1`}
-                              value={issue.status}
-                              onChange={(e) => {
-                                const next = e.target.value as IssueStatus
-                                updateIssueStatus(issue.id, next).then(
-                                  () => setAnnouncement(`Issue #${issue.number} marked ${next}.`),
-                                  (err) =>
-                                    setAnnouncement(
-                                      err instanceof Error ? err.message : 'Could not update the status.',
-                                    ),
-                                )
-                              }}
-                            >
-                              {STATUSES.map((s) => (
-                                <option key={s}>{s}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              className={button('ghost')}
-                              onClick={() => setIssueForm({ issue })}
-                            >
-                              Edit<span className="sr-only"> issue #{issue.number}</span>
-                            </button>
-                            <button
-                              type="button"
-                              className={button('ghost')}
-                              onClick={() => setMoving(issue)}
-                            >
-                              Move<span className="sr-only"> issue #{issue.number} to another page</span>
-                            </button>
-                            <button
-                              type="button"
-                              className={button('ghost', 'text-danger-text')}
-                              onClick={() => void removeIssue(issue)}
-                            >
-                              Delete<span className="sr-only"> issue #{issue.number}</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </article>
+                    <IssueCard
+                      project={project}
+                      page={page}
+                      issue={issue}
+                      onStatus={changeStatus}
+                      onEdit={(i) => setIssueForm({ issue: i })}
+                      onMove={setMoving}
+                      onDelete={(i) => void removeIssue(i)}
+                    />
                   </li>
                 ))}
               </ol>
