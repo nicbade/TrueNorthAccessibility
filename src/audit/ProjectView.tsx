@@ -5,6 +5,7 @@ import { downloadProjectWorkbook } from './exportExcel'
 import { computeMetrics, UNSET } from './metrics'
 import PageForm from './PageForm'
 import ProjectForm from './ProjectForm'
+import IssueSearchForm from './IssueSearchForm'
 import ViewerAccess from './ViewerAccess'
 import { hrefFor, navigate } from './router'
 import { createPage, deleteProject, updateProject, useAuditData } from './store'
@@ -25,6 +26,7 @@ export default function ProjectView({ project }: Props) {
   const [exporting, setExporting] = useState(false)
   const [status, setStatus] = useState('')
   const [includeHidden, setIncludeHidden] = useState(false)
+  const [search, setSearch] = useState('')
 
   const pages = useMemo(() => data.pages.filter((p) => p.projectId === project.id), [data.pages, project.id])
   const issues = useMemo(
@@ -147,6 +149,14 @@ export default function ProjectView({ project }: Props) {
       <div role="status" aria-live="polite" className="sr-only">
         {status}
       </div>
+
+      <IssueSearchForm
+        className="mt-6"
+        projectName={project.name}
+        value={search}
+        onChange={setSearch}
+        onSubmit={() => navigate(hrefFor.search(project.id, { q: search.trim() }))}
+      />
 
       <section aria-labelledby="metrics-heading" className="mt-8">
         <h2 id="metrics-heading" className="m-0 mb-3 font-serif text-xl">

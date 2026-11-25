@@ -6,6 +6,7 @@ import IssueView from './IssueView'
 import PageView from './PageView'
 import ProjectsView from './ProjectsView'
 import ProjectView from './ProjectView'
+import SearchView from './SearchView'
 import { HUB_PATH, hrefFor, parseRoute, useHash } from './router'
 import { signOut, useAuth } from './auth'
 import LoginScreen from './LoginScreen'
@@ -63,7 +64,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
           ? `Issue #${issue.number}: ${issue.description}`
           : route.view === 'issues' && project
             ? `${filterTitle(route.filter, route.value)} · ${project.name}`
-            : (page?.name ?? project?.name ?? 'Audit projects')
+            : route.view === 'search' && project
+              ? `${route.q ? `Search: ${route.q}` : 'Search issues'} · ${project.name}`
+              : (page?.name ?? project?.name ?? 'Audit projects')
 
   useEffect(() => {
     if (userId) void loadHubData(userId)
@@ -82,6 +85,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     })
   }, [])
 
+  // Typing in the search box rewrites the address; only arriving at the search view moves focus.
+  const focusKey = route.view === 'search' ? `search:${route.projectId}` : hash
+
   useEffect(() => {
     const fromIssue = lastIssueId.current
     lastIssueId.current = route.view === 'issue' ? route.issueId : null
@@ -93,7 +99,7 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     }
     // Coming back from an issue to its page, return focus to that issue in the list.
     const issueLink =
-      (route.view === 'page' || route.view === 'issues') && fromIssue
+      (route.view === 'page' || route.view === 'issues' || route.view === 'search') && fromIssue
         ? mainRef.current?.querySelector<HTMLElement>(`[data-issue-link="${CSS.escape(fromIssue)}"]`)
         : null
     // Coming back from a severity/status list to the dashboard, return focus to the link that opened it.
@@ -113,7 +119,7 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
     }
     mainRef.current?.querySelector<HTMLElement>('h1')?.focus()
     window.scrollTo({ top: 0 })
-  }, [hash])
+  }, [focusKey])
 
   const crumbs: { label: string; href: string }[] = [{ label: 'Projects', href: hrefFor.projects() }]
   if (project) crumbs.push({ label: project.name, href: hrefFor.project(project.id) })
@@ -123,6 +129,9 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
       label: filterTitle(route.filter, route.value),
       href: hrefFor.issues(project.id, route.filter, route.value),
     })
+  }
+  if (project && route.view === 'search') {
+    crumbs.push({ label: 'Search issues', href: hrefFor.search(project.id, route) })
   }
   if (project && page && issue) {
     crumbs.push({ label: `Issue #${issue.number}`, href: hrefFor.issue(project.id, page.id, issue.id) })
@@ -263,6 +272,14 @@ export default function AuditHub({ theme, onToggleTheme }: Props) {
             project={project}
             filter={route.filter}
             value={route.value}
+          />
+        ) : route.view === 'search' && project ? (
+          <SearchView
+            key={project.id}
+            project={project}
+            q={route.q}
+            severity={route.severity}
+            status={route.status}
           />
         ) : route.view === 'issue' && project && page && issue ? (
           <IssueView key={issue.id} project={project} page={page} issue={issue} />
